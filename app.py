@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
+import gradio as gr
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -160,10 +161,13 @@ def observation_schema():
     return Observation.model_json_schema()
 
 
-# Error handlers
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"error": str(exc), "type": type(exc).__name__}
-    )
+
+# ─────────────────────────── Gradio App ────────────────────────
+
+def greet(name):
+    return "Hello " + name + "!!"
+
+demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+
+# Mount Gradio into FastAPI
+app = gr.mount_gradio_app(app, demo, path="/")
