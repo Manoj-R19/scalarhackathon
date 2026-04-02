@@ -8,11 +8,10 @@ from openai import OpenAI
 # ---------------------------------------------------------
 # Configuration & Environment Variables
 # ---------------------------------------------------------
-# Required variables per prompt:
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-HF_TOKEN = os.getenv("HF_TOKEN")
-LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+API_BASE_URL = os.getenv( "API_BASE_URL", "<your-active-endpoint>")
+MODEL_NAME = os.getenv( "MODEL_NAME", "<your-active-model>")
+HF_TOKEN = os.getenv( "HF_TOKEN")
+LOCAL_IMAGE_NAME = os.getenv( "LOCAL_IMAGE_NAME")
 
 # Environment Server URL (Current project's FastAPI app)
 ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
