@@ -1,0 +1,51 @@
+C:\Users\manoj\OneDrive\Desktop\Scalar Hackathon\email-triage-env\.venv\Lib\site-packages\pytest_asyncio\plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.12.5, pytest-8.3.4, pluggy-1.6.0 -- C:\Users\manoj\OneDrive\Desktop\Scalar Hackathon\email-triage-env\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\manoj\OneDrive\Desktop\Scalar Hackathon\email-triage-env
+configfile: pyproject.toml
+plugins: anyio-4.13.0, asyncio-0.25.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None
+collecting ... collected 36 items
+
+tests/test_env.py::TestModels::test_action_label_valid PASSED            [  2%]
+tests/test_env.py::TestModels::test_action_delete_no_value PASSED        [  5%]
+tests/test_env.py::TestModels::test_action_draft_with_text PASSED        [  8%]
+tests/test_env.py::TestModels::test_action_escalate PASSED               [ 11%]
+tests/test_env.py::TestModels::test_label_enum_values PASSED             [ 13%]
+tests/test_env.py::TestModels::test_action_json_roundtrip PASSED         [ 16%]
+tests/test_env.py::TestReset::test_reset_easy_loads_5_emails PASSED      [ 19%]
+tests/test_env.py::TestReset::test_reset_medium_loads_10_emails PASSED   [ 22%]
+tests/test_env.py::TestReset::test_reset_hard_loads_15_emails PASSED     [ 25%]
+tests/test_env.py::TestReset::test_reset_returns_observation PASSED      [ 27%]
+tests/test_env.py::TestReset::test_reset_clears_state PASSED             [ 30%]
+tests/test_env.py::TestReset::test_reset_invalid_task_raises PASSED      [ 33%]
+tests/test_env.py::TestReset::test_reset_reproducible PASSED             [ 36%]
+tests/test_env.py::TestStep::test_label_correct_spam_gives_positive_reward PASSED [ 38%]
+tests/test_env.py::TestStep::test_label_correct_high_gives_positive_reward PASSED [ 41%]
+tests/test_env.py::TestStep::test_label_wrong_gives_negative_reward PASSED [ 44%]
+tests/test_env.py::TestStep::test_delete_spam_gives_positive_reward PASSED [ 47%]
+tests/test_env.py::TestStep::test_delete_legit_gives_negative_reward PASSED [ 50%]
+tests/test_env.py::TestStep::test_draft_reply_with_keywords_gives_reward PASSED [ 52%]
+tests/test_env.py::TestStep::test_draft_reply_to_spam_penalized PASSED   [ 55%]
+tests/test_env.py::TestStep::test_escalate_correct_escalation_gives_high_reward PASSED [ 58%]
+tests/test_env.py::TestStep::test_escalate_wrong_email_penalized PASSED  [ 61%]
+tests/test_env.py::TestStep::test_invalid_action_json_penalized PASSED   [ 63%]
+tests/test_env.py::TestStep::test_invalid_email_id_penalized PASSED      [ 66%]
+tests/test_env.py::TestStep::test_step_increments_counter PASSED         [ 69%]
+tests/test_env.py::TestStep::test_step_updates_history PASSED            [ 72%]
+tests/test_env.py::TestStep::test_done_when_max_steps_exceeded PASSED    [ 75%]
+tests/test_env.py::TestStep::test_done_when_inbox_cleared PASSED         [ 77%]
+tests/test_env.py::TestGrader::test_grader_returns_zero_on_empty_labels PASSED [ 80%]
+tests/test_env.py::TestGrader::test_grader_score_improves_with_correct_labels PASSED [ 83%]
+tests/test_env.py::TestGrader::test_grader_score_in_range PASSED         [ 86%]
+tests/test_env.py::TestGrader::test_grader_has_breakdown PASSED          [ 88%]
+tests/test_env.py::TestGrader::test_grader_hard_task_rewards_escalation PASSED [ 91%]
+tests/test_env.py::TestGrader::test_perfect_easy_score PASSED            [ 94%]
+tests/test_env.py::TestFullEpisode::test_full_easy_episode PASSED        [ 97%]
+tests/test_env.py::TestFullEpisode::test_tasks_info_structure PASSED     [100%]
+
+============================= 36 passed in 0.19s ==============================

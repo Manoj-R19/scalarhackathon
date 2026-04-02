@@ -1,0 +1,80 @@
+{
+  "easy": {
+    "emails": [
+      {"id": "e1", "subject": "WIN $1000 NOW!!!", "body": "Click here to claim your prize! Limited time offer! You have been selected!", "sender": "promo@scamalert.biz"},
+      {"id": "e2", "subject": "Cannot log into my account", "body": "Hi support, I have been trying to log in for the past 2 hours and keep getting 'invalid credentials'. My account is manoj@company.com. Please help urgently.", "sender": "manoj@company.com"},
+      {"id": "e3", "subject": "Cheap Meds Online - Viagra, Cialis", "body": "Best prices guaranteed. No prescription needed. Order now and save 80%!", "sender": "deals@illegalpharm.ru"},
+      {"id": "e4", "subject": "Suggestion: Add dark mode", "body": "Hello! Love the product. It would be great if you could add a dark mode option in the settings. Not urgent, just a nice-to-have.", "sender": "user123@gmail.com"},
+      {"id": "e5", "subject": "Payment failed three times", "body": "My card keeps getting declined when I try to upgrade my plan. I've tried two different cards and both fail at checkout. Please fix this ASAP.", "sender": "billing_issue@techcorp.io"}
+    ],
+    "ground_truth": {
+      "e1": {"label": "spam", "reply_keywords": []},
+      "e2": {"label": "high", "reply_keywords": ["reset", "password", "account", "credentials"]},
+      "e3": {"label": "spam", "reply_keywords": []},
+      "e4": {"label": "low", "reply_keywords": ["feedback", "noted", "feature", "dark"]},
+      "e5": {"label": "high", "reply_keywords": ["payment", "billing", "card", "team"]}
+    }
+  },
+  "medium": {
+    "emails": [
+      {"id": "m1", "subject": "CONGRATULATIONS! You won a MacBook!", "body": "Enter your credit card to claim. Offer expires in 1 hour!!!", "sender": "free@scam.net"},
+      {"id": "m2", "subject": "App crashes on iOS 17.4", "body": "Your app crashes every time I open a document on iPhone 15 Pro with iOS 17.4. Reproducible 100% of the time. Crash log attached.", "sender": "ios_beta@devtester.com"},
+      {"id": "m3", "subject": "Increase my storage quota", "body": "I need more than 5GB for my project archive. Can you upgrade me to the 50GB plan and bill monthly?", "sender": "storage_request@agency.co"},
+      {"id": "m4", "subject": "Nigerian Prince Needs Help", "body": "URGENT: I am a prince from Nigeria and need to transfer $10M. Please send your bank details.", "sender": "prince@419scam.org"},
+      {"id": "m5", "subject": "Invoice #4421 overdue notice", "body": "This is a reminder that invoice #4421 for $2,400 is now 30 days overdue. Please settle to avoid service interruption.", "sender": "ar@vendorco.com"},
+      {"id": "m6", "subject": "Integration API broken", "body": "Our Zapier integration stopped working at 3AM UTC. Webhooks return 503. This is blocking our entire sales pipeline. P1 issue.", "sender": "cto@startupxyz.io"},
+      {"id": "m7", "subject": "Testimonial request", "body": "Hi, we'd love to feature you in our case study. Can you share a short testimonial about how our product helped your team?", "sender": "marketing@partner.com"},
+      {"id": "m8", "subject": "Refund for cancelled subscription", "body": "I cancelled my annual plan last week but haven't received my prorated refund of $89. Can you process this?", "sender": "refund_me@user.net"},
+      {"id": "m9", "subject": "Make Money Fast - Work From Home", "body": "Earn $500/day from home! No experience needed. Click to start!", "sender": "jobs@fakework.biz"},
+      {"id": "m10", "subject": "Data export tool not working", "body": "The CSV export button on the analytics page downloads an empty file. Has been broken since yesterday's release. Need this for monthly report.", "sender": "dataanalyst@corp.com"}
+    ],
+    "ground_truth": {
+      "m1": {"label": "spam", "reply_keywords": []},
+      "m2": {"label": "high", "reply_keywords": ["crash", "iOS", "investigating", "team", "fix"]},
+      "m3": {"label": "med", "reply_keywords": ["storage", "upgrade", "plan", "billing"]},
+      "m4": {"label": "spam", "reply_keywords": []},
+      "m5": {"label": "med", "reply_keywords": ["invoice", "payment", "finance", "team"]},
+      "m6": {"label": "high", "reply_keywords": ["API", "503", "investigating", "engineer", "webhook"]},
+      "m7": {"label": "low", "reply_keywords": ["testimonial", "marketing", "happy", "team"]},
+      "m8": {"label": "med", "reply_keywords": ["refund", "processed", "billing", "days"]},
+      "m9": {"label": "spam", "reply_keywords": []},
+      "m10": {"label": "high", "reply_keywords": ["export", "bug", "fix", "investigating", "CSV"]}
+    }
+  },
+  "hard": {
+    "emails": [
+      {"id": "h1", "subject": "PRODUCTION DB CORRUPTED - ALL DATA LOST", "body": "CRITICAL: Our production PostgreSQL database appears to be corrupted after your migration script ran at 02:00 UTC. We cannot access ANY customer records. Revenue impact: $50,000/hour. Need immediate escalation to your senior engineering team.", "sender": "ceo@enterprise-client.com"},
+      {"id": "h2", "subject": "Free iPhone 16 - Limited Offer", "body": "Click now to claim your free iPhone 16! Hurry, only 10 left!", "sender": "promo@freephoneclick.biz"},
+      {"id": "h3", "subject": "Security vulnerability report", "body": "I discovered a SQL injection vulnerability in your /api/search endpoint. Have a PoC that dumps the users table. Please acknowledge and remediate. Will disclose in 7 days.", "sender": "security_researcher@bugbounty.io"},
+      {"id": "h4", "subject": "Feature: Bulk user import via CSV", "body": "It would be great to import users in bulk using a CSV file. Our team has 200+ accounts to create.", "sender": "admin@smallbusiness.com"},
+      {"id": "h5", "subject": "Subscription renewal question", "body": "When does my annual subscription renew? I want to make sure my payment method is up to date.", "sender": "basicuser@personal.net"},
+      {"id": "h6", "subject": "URGENT: OAuth SSO broken for all enterprise users", "body": "As of 09:15 UTC, none of our 500 enterprise users can authenticate via SAML SSO. They are completely locked out. This must be fixed in the next 30 minutes or we escalate to our legal team.", "sender": "it-director@fortune500.com"},
+      {"id": "h7", "subject": "Cheap SEO backlinks - 10,000 for $5", "body": "Boost your rankings instantly! 10,000 DA40+ backlinks for just $5. Order now!", "sender": "seo@spamlinks.xyz"},
+      {"id": "h8", "subject": "Documentation typo", "body": "Found a typo on your docs page - 'Auhtentication' should be 'Authentication' in the API reference.", "sender": "nitpicky@developer.io"},
+      {"id": "h9", "subject": "Mobile app login loop", "body": "After your latest Android update, the app is stuck in a login loop for users with 2FA enabled. Affects about 30% of our mobile users based on our analytics.", "sender": "mobile_lead@appcompany.com"},
+      {"id": "h10", "subject": "Partnership proposal", "body": "We would love to explore a white-label partnership for the APAC market. Can you connect me with your BD team?", "sender": "bd@apacpartner.com"},
+      {"id": "h11", "subject": "Make Money With Crypto - 10x Returns!", "body": "Join our exclusive crypto signal group. 10x returns guaranteed! Invest now!", "sender": "crypto@guaranteed-scam.net"},
+      {"id": "h12", "subject": "Data residency compliance issue - GDPR", "body": "Our legal team flagged that your platform stores EU customer data on US servers without a valid DPA in place. GDPR Article 46 compliance required within 48 hours or we will have to suspend our account and notify authorities.", "sender": "dpo@eucompany.de"},
+      {"id": "h13", "subject": "Billing discrepancy - charged twice", "body": "I was charged $299 twice in March. Please refund the duplicate charge immediately.", "sender": "doublecharged@user.com"},
+      {"id": "h14", "subject": "Request for custom SLA agreement", "body": "As we scale to 1M users, we need a custom 99.99% uptime SLA with dedicated support. Can your enterprise team reach out?", "sender": "coo@scalingfast.io"},
+      {"id": "h15", "subject": "API Rate limit too restrictive", "body": "Our data pipeline hits your 1000 req/min rate limit constantly. We need at least 10,000 req/min for production workloads. Can you adjust our account limits?", "sender": "devops@datapipeline.tech"}
+    ],
+    "ground_truth": {
+      "h1": {"label": "escalate", "reply_keywords": ["escalated", "senior", "engineer", "investigating", "immediately", "database"]},
+      "h2": {"label": "spam", "reply_keywords": []},
+      "h3": {"label": "escalate", "reply_keywords": ["security", "acknowledged", "team", "vulnerability", "remediate"]},
+      "h4": {"label": "low", "reply_keywords": ["feature", "roadmap", "noted", "CSV", "import"]},
+      "h5": {"label": "low", "reply_keywords": ["renewal", "account", "subscription", "billing"]},
+      "h6": {"label": "escalate", "reply_keywords": ["SSO", "SAML", "investigating", "engineer", "urgent", "authentication"]},
+      "h7": {"label": "spam", "reply_keywords": []},
+      "h8": {"label": "low", "reply_keywords": ["thank", "typo", "fix", "documentation"]},
+      "h9": {"label": "high", "reply_keywords": ["login", "2FA", "Android", "investigating", "fix", "bug"]},
+      "h10": {"label": "low", "reply_keywords": ["partnership", "business", "team", "connect"]},
+      "h11": {"label": "spam", "reply_keywords": []},
+      "h12": {"label": "high", "reply_keywords": ["GDPR", "compliance", "DPA", "legal", "team", "data"]},
+      "h13": {"label": "med", "reply_keywords": ["refund", "billing", "charge", "duplicate", "process"]},
+      "h14": {"label": "med", "reply_keywords": ["enterprise", "SLA", "team", "connect", "sales"]},
+      "h15": {"label": "med", "reply_keywords": ["rate limit", "API", "adjust", "account", "team"]}
+    }
+  }
+}
