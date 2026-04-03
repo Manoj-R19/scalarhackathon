@@ -1,3 +1,14 @@
+---
+title: Email Triage OpenEnv
+emoji: 🏆
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+python_version: "3.12"
+app_file: app.py
+pinned: false
+---
+
 # EmailTriage OpenEnv 🏆
 
 > **Real-world email support triage benchmark for AI agents.**  
