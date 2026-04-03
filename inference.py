@@ -8,25 +8,19 @@ from openai import OpenAI
 # ---------------------------------------------------------
 # Configuration & Mandatory Environment Variables
 # ---------------------------------------------------------
-API_BASE_URL = os.getenv("API_BASE_URL")
-MODEL_NAME = os.getenv("MODEL_NAME")
+# Defaults set to Option B (Groq) for testing
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-# Environment Server URL (Current project's FastAPI app as it would run in the Space)
+# Environment Server URL (Current project's FastAPI app)
 ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
 
-# Validation of mandatory credentials for runtime
-# Note: During validation/building, these might be missing, so we handle gracefully
-# but the script MUST use these variables for the actual inference.
 def get_client():
-    if not all([API_BASE_URL, MODEL_NAME, HF_TOKEN]):
-        # Fallback for local testing if needed, but production requires above
-        return OpenAI(
-            api_key=os.getenv("OPENAI_API_KEY", "no-key"),
-            base_url=API_BASE_URL or "https://api.openai.com/v1"
-        )
+    # If HF_TOKEN is not provided, use a placeholder 'no-token' for local/build validation
+    key = HF_TOKEN or os.getenv("OPENAI_API_KEY", "no-token")
     return OpenAI(
-        api_key=HF_TOKEN,
+        api_key=key,
         base_url=API_BASE_URL
     )
 
