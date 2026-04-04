@@ -8,9 +8,9 @@ from openai import OpenAI
 # ---------------------------------------------------------
 # Configuration & Mandatory Environment Variables
 # ---------------------------------------------------------
-# Default set to OpenAI as requested
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+# Configured for Hugging Face Inference API (OpenAI-compatible)
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "google/gemma-2-9b-it")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 # Environment Server URL (Current project's FastAPI app)
