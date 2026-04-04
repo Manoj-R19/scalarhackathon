@@ -10,6 +10,11 @@ import json
 from pathlib import Path
 from typing import Optional
 
+# Ensure root directory is in sys.path when running from server/
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
 import gradio as gr
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -136,10 +141,11 @@ def action_schema():
 
 # ─────────────────────────── Main Server ──────────────────────
 
-def run_server():
+def main():
     """Main entry point for starting the OpenEnv server."""
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 7860)), reload=False)
+    # Use the server.app:app name since it's now in the server/ package
+    uvicorn.run("server.app:app", host="0.0.0.0", port=int(os.getenv("PORT", 7860)), reload=False)
 
 if __name__ == "__main__":
-    run_server()
+    main()
