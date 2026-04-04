@@ -8,9 +8,9 @@ from openai import OpenAI
 # ---------------------------------------------------------
 # Configuration & Mandatory Environment Variables
 # ---------------------------------------------------------
-# Defaults set to Option B (Groq) for testing
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+# Default set to OpenAI as requested
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 # Environment Server URL (Current project's FastAPI app)
