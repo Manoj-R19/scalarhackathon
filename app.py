@@ -5,6 +5,7 @@ Endpoints: /reset /step /grader /tasks /state /health /docs
 from __future__ import annotations
 
 import sys
+import os
 import json
 from pathlib import Path
 from typing import Optional
@@ -50,10 +51,7 @@ class ResetRequest(BaseModel):
 
 
 class StepRequest(BaseModel):
-    action: str = Field(
-        ...,
-        description='JSON string of Action. E.g.: {"type": "label", "email_id": "e1", "value": "spam"}'
-    )
+    action: str = Field(..., description='Action JSON')
 
 
 class GraderRequest(BaseModel):
@@ -87,11 +85,7 @@ def get_tasks():
 
 @app.post("/reset", tags=["Environment"])
 def reset(req: ResetRequest = ResetRequest()):
-    """
-    Reset environment to a fresh task inbox.
-
-    Returns initial observation with all emails visible.
-    """
+    """Reset environment to a fresh task inbox."""
     try:
         obs = env.reset(task=req.task)
         return {
@@ -104,16 +98,7 @@ def reset(req: ResetRequest = ResetRequest()):
 
 @app.post("/step", tags=["Environment"])
 def step(req: StepRequest):
-    """
-    Take one action in the environment.
-
-    Action JSON format:
-    - `{"type": "label", "email_id": "e1", "value": "spam"}`
-    - `{"type": "delete", "email_id": "e2"}`
-    - `{"type": "draft", "email_id": "e3", "value": "Thanks for reaching out..."}`
-    - `{"type": "escalate", "email_id": "e4"}`
-    - `{"type": "archive", "email_id": "e5"}`
-    """
+    """Take one action in the environment."""
     if env.state is None or not env.state.inbox:
         raise HTTPException(status_code=400, detail="Environment not initialized. Call /reset first.")
 
@@ -128,11 +113,7 @@ def step(req: StepRequest):
 
 @app.post("/grader", tags=["Environment"])
 def grader(req: GraderRequest = GraderRequest()):
-    """
-    Score the current episode. Returns 0.0–1.0 with breakdown.
-
-    Call after episode is done (or anytime for partial scoring).
-    """
+    """Score the current episode."""
     if env.state is None or not env.state.inbox:
         raise HTTPException(status_code=400, detail="Environment not initialized. Call /reset first.")
 
@@ -150,24 +131,15 @@ def get_state():
 
 @app.get("/action-schema", tags=["Meta"])
 def action_schema():
-    """Return JSON schema for the Action model."""
     return Action.model_json_schema()
 
 
-@app.get("/observation-schema", tags=["Meta"])
-def observation_schema():
-    """Return JSON schema for the Observation model."""
-    from models import Observation
-    return Observation.model_json_schema()
+# ─────────────────────────── Main Server ──────────────────────
 
+def run_server():
+    """Main entry point for starting the OpenEnv server."""
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 7860)), reload=False)
 
-
-# ─────────────────────────── Gradio App ────────────────────────
-
-def greet(name):
-    return "Hello " + name + "!!"
-
-demo = gr.Interface(fn=greet, inputs="text", outputs="text")
-
-# Mount Gradio into FastAPI
-app = gr.mount_gradio_app(app, demo, path="/")
+if __name__ == "__main__":
+    run_server()
