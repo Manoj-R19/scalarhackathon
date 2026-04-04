@@ -86,7 +86,7 @@ def get_tasks():
 
 
 @app.post("/reset", tags=["Environment"])
-def reset(req: ResetRequest):
+def reset(req: ResetRequest = ResetRequest()):
     """
     Reset environment to a fresh task inbox.
 
