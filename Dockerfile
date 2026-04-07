@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.12-bookworm
 
 # Metadata
 LABEL maintainer="EmailTriage OpenEnv"
