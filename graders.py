@@ -6,6 +6,8 @@ def safe_normalize(score: float, epsilon: float = 0.01) -> float:
     """Clamp ANY score to strict (epsilon, 1-epsilon)"""
     return max(epsilon, min(1.0 - epsilon, max(0.0, min(1.0, float(score)))))
 
+from environment import EmailTriageEnv
+
 def _extract_raw(state) -> float:
     # Handle mock test suites (Phase 2 Validation)
     if isinstance(state, dict):
@@ -16,6 +18,12 @@ def _extract_raw(state) -> float:
         return 0.5
         
     # Real evaluation context - fallback logic if passed an object
+    if hasattr(state, 'inbox') and hasattr(state, 'task'):
+        env = EmailTriageEnv()
+        env.reset(task=state.task)
+        env.state = state
+        return env.grader().score
+        
     return 0.5
 
 # Caching optimization for fast inference

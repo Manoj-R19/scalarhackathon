@@ -1,0 +1,55 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.12.5, pytest-8.3.4, pluggy-1.6.0
+rootdir: C:\Users\manoj\OneDrive\Desktop\Scalar Hackathon\email-triage-env
+configfile: pyproject.toml
+plugins: anyio-4.10.0, asyncio-0.25.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None
+collected 36 items
+
+tests\test_env.py .............FF.F.F.F.FF............                   [100%]
+
+================================== FAILURES ===================================
+___________ TestStep.test_label_correct_spam_gives_positive_reward ____________
+tests\test_env.py:122: in test_label_correct_spam_gives_positive_reward
+    assert result.reward > 0.5
+E   AssertionError: assert 0.06999999999999999 > 0.5
+E    +  where 0.06999999999999999 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...ne=False, step=1), reward=0.06999999999999999, done=False, info={'step': 1, 'task': 'easy', 'action_applied': 'label'}).reward
+___________ TestStep.test_label_correct_high_gives_positive_reward ____________
+tests\test_env.py:126: in test_label_correct_high_gives_positive_reward
+    assert result.reward > 0.5
+E   AssertionError: assert 0.06999999999999999 > 0.5
+E    +  where 0.06999999999999999 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...ne=False, step=1), reward=0.06999999999999999, done=False, info={'step': 1, 'task': 'easy', 'action_applied': 'label'}).reward
+_______________ TestStep.test_delete_spam_gives_positive_reward _______________
+tests\test_env.py:135: in test_delete_spam_gives_positive_reward
+    assert result.reward > 0.5
+E   AssertionError: assert 0.08000000000000002 > 0.5
+E    +  where 0.08000000000000002 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...e=False, step=1), reward=0.08000000000000002, done=False, info={'step': 1, 'task': 'easy', 'action_applied': 'delete'}).reward
+____________ TestStep.test_draft_reply_with_keywords_gives_reward _____________
+tests\test_env.py:148: in test_draft_reply_with_keywords_gives_reward
+    assert result.reward > 0.5
+E   AssertionError: assert 0.08000000000000002 > 0.5
+E    +  where 0.08000000000000002 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...ne=False, step=1), reward=0.08000000000000002, done=False, info={'step': 1, 'task': 'easy', 'action_applied': 'draft'}).reward
+_________ TestStep.test_escalate_correct_escalation_gives_high_reward _________
+tests\test_env.py:160: in test_escalate_correct_escalation_gives_high_reward
+    assert result.reward >= 0.4
+E   AssertionError: assert 0.09000000000000001 >= 0.4
+E    +  where 0.09000000000000001 = StepResult(observation=Observation(current_emails=[EmailView(id='h1', subject='PRODUCTION DB CORRUPTED - ALL DATA LOST...False, step=1), reward=0.09000000000000001, done=False, info={'step': 1, 'task': 'hard', 'action_applied': 'escalate'}).reward
+_________________ TestStep.test_invalid_action_json_penalized _________________
+tests\test_env.py:168: in test_invalid_action_json_penalized
+    assert result.reward == -0.5
+E   assert 0.01 == -0.5
+E    +  where 0.01 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...valid json {{{{', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/json_invalid"}).reward
+__________________ TestStep.test_invalid_email_id_penalized ___________________
+tests\test_env.py:173: in test_invalid_email_id_penalized
+    assert result.reward == -0.2
+E   assert 0.01 == -0.2
+E    +  where 0.01 = StepResult(observation=Observation(current_emails=[EmailView(id='e1', subject='WIN $1000 NOW!!!', body='Click here to ...=0), history=[], done=False, step=0), reward=0.01, done=False, info={'error': "Email 'INVALID_ID' not found in inbox"}).reward
+=========================== short test summary info ===========================
+FAILED tests/test_env.py::TestStep::test_label_correct_spam_gives_positive_reward
+FAILED tests/test_env.py::TestStep::test_label_correct_high_gives_positive_reward
+FAILED tests/test_env.py::TestStep::test_delete_spam_gives_positive_reward - ...
+FAILED tests/test_env.py::TestStep::test_draft_reply_with_keywords_gives_reward
+FAILED tests/test_env.py::TestStep::test_escalate_correct_escalation_gives_high_reward
+FAILED tests/test_env.py::TestStep::test_invalid_action_json_penalized - asse...
+FAILED tests/test_env.py::TestStep::test_invalid_email_id_penalized - assert ...
+======================== 7 failed, 29 passed in 0.22s =========================
