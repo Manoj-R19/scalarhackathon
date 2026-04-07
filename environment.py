@@ -78,11 +78,9 @@ class EmailTriageEnv:
 
         return self._get_obs()
 
-    def _scale_reward(self, raw_reward: float) -> float:
-        """Scales raw reward in [-0.5, 0.5] range to strict [0.01, 0.99]."""
-        # Clamp raw_reward first to be safe
-        clamped_raw = max(-0.5, min(0.5, raw_reward))
-        return round(0.01 + (clamped_raw + 0.5) * 0.98, 4)
+    def _safe_normalize(self, score: float, epsilon: float = 0.01) -> float:
+        """Clamp ANY score to strict (epsilon, 1-epsilon)"""
+        return max(epsilon, min(1.0 - epsilon, max(0.0, min(1.0, float(score)))))
 
     # ──────────────── Step ────────────────────────
 
@@ -94,7 +92,7 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=self._scale_reward(-0.5),
+                reward=self._safe_normalize(-0.5),
                 done=False,
                 info={"error": f"Invalid action JSON: {e}"}
             )
@@ -106,7 +104,7 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=self._scale_reward(-0.2),
+                reward=self._safe_normalize(-0.2),
                 done=False,
                 info={"error": f"Email '{email_id}' not found in inbox"}
             )
@@ -116,13 +114,22 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=self._scale_reward(-0.1),
+                reward=self._safe_normalize(-0.1),
                 done=False,
                 info={"warning": f"Email '{email_id}' already processed"}
             )
 
         raw_reward = self._compute_reward(action)
-        reward = self._scale_reward(raw_reward)
+        
+        # Sparse reward scale [-0.5, 0.5] -> [0, 1]
+        sparse_norm = max(0.0, min(1.0, (raw_reward + 0.5)))
+        
+        # Progressive shaping
+        trajectory_progress = len(self.action_history) / MAX_STEPS
+        shaped_reward = 0.1 * sparse_norm + 0.9 * trajectory_progress
+        
+        # Safety clamp
+        reward = self._safe_normalize(shaped_reward)
 
         # Apply action to state
         self._apply_action(action)

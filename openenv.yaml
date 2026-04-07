@@ -10,11 +10,12 @@ author: "EmailTriage Team"
 license: MIT
 
 tasks:
-  - id: easy
+  - name: "task_easy"
     description: >
       Binary classify 5 emails into spam or legit priorities (low/med/high).
       Delete identified spam. Simple pattern matching sufficient.
     difficulty: easy
+    grader: "graders.grader_easy"
     max_steps: 50
     email_count: 5
     grader_weights:
@@ -23,11 +24,12 @@ tasks:
       reply_relevance: 0.2
       inbox_cleared: 0.1
 
-  - id: medium
+  - name: "task_medium"
     description: >
       Classify and prioritize 10 mixed-difficulty emails: spam, low, med, high.
       Delete all spam, label legit emails by urgency. Requires judgment.
     difficulty: medium
+    grader: "graders.grader_medium"
     max_steps: 50
     email_count: 10
     grader_weights:
@@ -36,12 +38,13 @@ tasks:
       reply_relevance: 0.2
       inbox_cleared: 0.1
 
-  - id: hard
+  - name: "task_hard"
     description: >
       Full triage of 15 complex emails: classify all, draft 1-2 sentence replies
       for legit emails, delete spam, escalate P0 critical issues (production outages,
       security vulnerabilities, all-user lockouts). Tests judgment and compositionality.
     difficulty: hard
+    grader: "graders.grader_hard"
     max_steps: 50
     email_count: 15
     grader_weights:
