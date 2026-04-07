@@ -73,9 +73,9 @@ observation_space:
 
 reward:
   type: dense
-  range: [-0.5, 0.5]
+  range: [0.01, 0.99]
   description: >
-    Shaped per-step rewards. Correct label: +0.2, wrong label: -0.1,
+    Shaped per-step rewards scaled strictly to (0.01, 0.99) range.
     delete spam: +0.3, delete legit: -0.4, escalate P0: +0.4,
     wrong escalate: -0.2, good draft (keyword match): +0.05 to +0.35,
     draft to spam: -0.2, invalid action: -0.5. Plus progress bonus.

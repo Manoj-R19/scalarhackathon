@@ -119,25 +119,25 @@ class TestReset:
 class TestStep:
     def test_label_correct_spam_gives_positive_reward(self, easy_env):
         result = easy_env.step(json.dumps({"type": "label", "email_id": "e1", "value": "spam"}))
-        assert result.reward > 0
+        assert result.reward > 0.5
 
     def test_label_correct_high_gives_positive_reward(self, easy_env):
         result = easy_env.step(json.dumps({"type": "label", "email_id": "e2", "value": "high"}))
-        assert result.reward > 0
+        assert result.reward > 0.5
 
     def test_label_wrong_gives_negative_reward(self, easy_env):
         # e1 is spam, mislabeling as high
         result = easy_env.step(json.dumps({"type": "label", "email_id": "e1", "value": "high"}))
-        assert result.reward < 0
+        assert result.reward < 0.5
 
     def test_delete_spam_gives_positive_reward(self, easy_env):
         result = easy_env.step(json.dumps({"type": "delete", "email_id": "e1"}))
-        assert result.reward > 0
+        assert result.reward > 0.5
 
     def test_delete_legit_gives_negative_reward(self, easy_env):
         # e2 is a legit high priority email
         result = easy_env.step(json.dumps({"type": "delete", "email_id": "e2"}))
-        assert result.reward < 0
+        assert result.reward < 0.5
 
     def test_draft_reply_with_keywords_gives_reward(self, easy_env):
         result = easy_env.step(json.dumps({
@@ -145,7 +145,7 @@ class TestStep:
             "email_id": "e2",
             "value": "We are looking into the credentials and account reset immediately."
         }))
-        assert result.reward > 0
+        assert result.reward > 0.5
 
     def test_draft_reply_to_spam_penalized(self, easy_env):
         result = easy_env.step(json.dumps({
@@ -153,7 +153,7 @@ class TestStep:
             "email_id": "e1",  # spam
             "value": "Thanks for your message!"
         }))
-        assert result.reward < 0
+        assert result.reward < 0.5
 
     def test_escalate_correct_escalation_gives_high_reward(self, hard_env):
         result = hard_env.step(json.dumps({"type": "escalate", "email_id": "h1"}))
@@ -161,7 +161,7 @@ class TestStep:
 
     def test_escalate_wrong_email_penalized(self, hard_env):
         result = hard_env.step(json.dumps({"type": "escalate", "email_id": "h4"}))
-        assert result.reward < 0
+        assert result.reward < 0.5
 
     def test_invalid_action_json_penalized(self, easy_env):
         result = easy_env.step("not valid json {{{{")

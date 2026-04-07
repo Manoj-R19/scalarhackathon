@@ -115,7 +115,9 @@ class EmailTriageEnv:
                 info={"warning": f"Email '{email_id}' already processed"}
             )
 
-        reward = self._compute_reward(action)
+        raw_reward = self._compute_reward(action)
+        # Scale [-0.5, 0.5] to [0.01, 0.99] strictly
+        reward = 0.01 + (raw_reward + 0.5) * 0.98
 
         # Apply action to state
         self._apply_action(action)
@@ -355,9 +357,9 @@ class EmailTriageEnv:
             cfg.get("empty_w", 0)    * inbox_cleared
         )
         
-        # Strict (0, 1) mapping: clamp to [0.001, 0.999] as requested
+        # Strict (0, 1) mapping: clamp to [0.01, 0.99] as suggested
         def strict_clamp(val):
-            return round(min(0.999, max(0.001, float(val))), 4)
+            return round(min(0.99, max(0.01, float(val))), 4)
 
         score = strict_clamp(raw_score)
         
