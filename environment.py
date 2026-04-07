@@ -78,6 +78,12 @@ class EmailTriageEnv:
 
         return self._get_obs()
 
+    def _scale_reward(self, raw_reward: float) -> float:
+        """Scales raw reward in [-0.5, 0.5] range to strict [0.01, 0.99]."""
+        # Clamp raw_reward first to be safe
+        clamped_raw = max(-0.5, min(0.5, raw_reward))
+        return round(0.01 + (clamped_raw + 0.5) * 0.98, 4)
+
     # ──────────────── Step ────────────────────────
 
     def step(self, action_json: str) -> StepResult:
@@ -88,7 +94,7 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=-0.5,
+                reward=self._scale_reward(-0.5),
                 done=False,
                 info={"error": f"Invalid action JSON: {e}"}
             )
@@ -100,7 +106,7 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=-0.2,
+                reward=self._scale_reward(-0.2),
                 done=False,
                 info={"error": f"Email '{email_id}' not found in inbox"}
             )
@@ -110,14 +116,13 @@ class EmailTriageEnv:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
-                reward=-0.1,
+                reward=self._scale_reward(-0.1),
                 done=False,
                 info={"warning": f"Email '{email_id}' already processed"}
             )
 
         raw_reward = self._compute_reward(action)
-        # Scale [-0.5, 0.5] to [0.01, 0.99] strictly
-        reward = 0.01 + (raw_reward + 0.5) * 0.98
+        reward = self._scale_reward(raw_reward)
 
         # Apply action to state
         self._apply_action(action)
@@ -129,7 +134,7 @@ class EmailTriageEnv:
             step=self.state.step_count,
             action_type=action.type,
             email_id=email_id,
-            reward=round(reward, 3),
+            reward=reward,
         ))
 
         done = self._is_done()
@@ -137,7 +142,7 @@ class EmailTriageEnv:
 
         return StepResult(
             observation=obs,
-            reward=round(reward, 4),
+            reward=reward,
             done=done,
             info={
                 "step": self.state.step_count,
@@ -280,20 +285,24 @@ class EmailTriageEnv:
 
     # ──────────────── Grader ──────────────────────
 
+    def _strict_clamp(self, val: float) -> float:
+        """Ensures val is strictly in (0.01, 0.99) range."""
+        return round(max(0.01, min(0.99, float(val))), 4)
+
     def grader(self) -> GraderResult:
         gt = self.ground_truth
         total = len(gt)
         # Default breakdown with keys from openenv.yaml
         breakdown = {
-            "label_accuracy": 0.001,
-            "spam_recall": 0.001,
-            "reply_relevance": 0.001,
-            "escalation_recall": 0.001,
-            "inbox_cleared": 0.001,
+            "label_accuracy": 0.05,
+            "spam_recall": 0.05,
+            "reply_relevance": 0.05,
+            "escalation_recall": 0.05,
+            "inbox_cleared": 0.05,
         }
         
         if total == 0:
-            return GraderResult(score=0.001, breakdown=breakdown)
+            return GraderResult(score=0.1, breakdown=breakdown)
 
         cfg = TASK_CONFIG.get(self.current_task, TASK_CONFIG["easy"])
 
@@ -302,22 +311,24 @@ class EmailTriageEnv:
             1 for eid, info in gt.items()
             if self.state.labels.get(eid) == info["label"]
         )
-        label_acc = label_correct / total
+        label_acc_raw = label_correct / total
+        label_acc = 0.02 + (label_acc_raw * 0.96)  # Scale [0,1] -> [0.02, 0.98]
 
         # 2. Spam recall
         spam_ids = [eid for eid, info in gt.items() if info["label"] == "spam"]
         if not spam_ids:
-            spam_recall = 1.0
+            spam_recall = 0.95  # No spam: pass with room for improvement
         else:
             spam_correct = sum(
                 1 for eid in spam_ids
                 if eid in self.state.deleted or self.state.labels.get(eid) == "spam"
             )
-            spam_recall = spam_correct / len(spam_ids)
+            spam_recall_raw = spam_correct / len(spam_ids)
+            spam_recall = 0.05 + (spam_recall_raw * 0.90) # [0.05, 0.95]
 
         # 3. Reply relevance
         legit_ids = [eid for eid, info in gt.items() if info["label"] != "spam"]
-        reply_score = 0.0
+        reply_score = 0.05
         if legit_ids:
             hits_sum = 0.0
             for eid in legit_ids:
@@ -327,29 +338,37 @@ class EmailTriageEnv:
                     if kws:
                         hits = sum(1 for kw in kws if kw.lower() in reply_text)
                         hits_sum += hits / len(kws)
-            reply_score = hits_sum / len(legit_ids)
+            reply_score_raw = hits_sum / len(legit_ids)
+            reply_score = 0.05 + (reply_score_raw * 0.92)
 
         # 4. Escalation recall
         escalate_ids = [eid for eid, info in gt.items() if info["label"] == "escalate"]
         if not escalate_ids:
-            escalate_recall = 1.0
+            escalate_recall = 0.95
         else:
             esc_correct = sum(
                 1 for eid in escalate_ids
                 if self.state.labels.get(eid) == "escalate"
             )
-            escalate_recall = esc_correct / len(escalate_ids)
+            escalate_recall_raw = esc_correct / len(escalate_ids)
+            escalate_recall = 0.02 + (escalate_recall_raw * 0.96)
 
-        # 5. Inbox cleared
+        # 5. Inbox cleared (Progress)
         processed = (
             set(self.state.labels.keys()) |
             set(self.state.deleted) |
             set(self.state.archived)
         )
-        inbox_cleared = len(processed) / total
+        progress = len(processed) / total
+        if progress >= 1.0:
+            inbox_cleared = 0.95
+        elif progress >= 0.5:
+            inbox_cleared = 0.5 + (progress - 0.5) * 0.4  # 0.5 to 0.9
+        else:
+            inbox_cleared = 0.05 + progress * 0.45      # 0.05 to 0.5
 
         # Weighted final score
-        raw_score = (
+        raw_weighted_score = (
             cfg.get("label_w", 0)    * label_acc +
             cfg.get("spam_w", 0)     * spam_recall +
             cfg.get("reply_w", 0)    * reply_score +
@@ -357,20 +376,16 @@ class EmailTriageEnv:
             cfg.get("empty_w", 0)    * inbox_cleared
         )
         
-        # Strict (0, 1) mapping: clamp to [0.01, 0.99] as suggested
-        def strict_clamp(val):
-            return round(min(0.99, max(0.01, float(val))), 4)
-
-        score = strict_clamp(raw_score)
+        score = self._strict_clamp(raw_weighted_score)
         
         return GraderResult(
             score=score,
             breakdown={
-                "label_accuracy":    strict_clamp(label_acc),
-                "spam_recall":       strict_clamp(spam_recall),
-                "reply_relevance":   strict_clamp(reply_score),
-                "escalation_recall": strict_clamp(escalate_recall),
-                "inbox_cleared":     strict_clamp(inbox_cleared),
+                "label_accuracy":    self._strict_clamp(label_acc),
+                "spam_recall":       self._strict_clamp(spam_recall),
+                "reply_relevance":   self._strict_clamp(reply_score),
+                "escalation_recall": self._strict_clamp(escalate_recall),
+                "inbox_cleared":     self._strict_clamp(inbox_cleared),
             },
             details={
                 "task": self.current_task,
