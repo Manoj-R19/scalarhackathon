@@ -281,8 +281,17 @@ class EmailTriageEnv:
     def grader(self) -> GraderResult:
         gt = self.ground_truth
         total = len(gt)
+        # Default breakdown with keys from openenv.yaml
+        breakdown = {
+            "label_accuracy": 0.001,
+            "spam_recall": 0.001,
+            "reply_relevance": 0.001,
+            "escalation_recall": 0.001,
+            "inbox_cleared": 0.001,
+        }
+        
         if total == 0:
-            return GraderResult(score=0.0001, breakdown={})
+            return GraderResult(score=0.001, breakdown=breakdown)
 
         cfg = TASK_CONFIG.get(self.current_task, TASK_CONFIG["easy"])
 
@@ -293,39 +302,43 @@ class EmailTriageEnv:
         )
         label_acc = label_correct / total
 
-        # 2. Spam recall (spam correctly deleted or labeled)
+        # 2. Spam recall
         spam_ids = [eid for eid, info in gt.items() if info["label"] == "spam"]
-        spam_correct = sum(
-            1 for eid in spam_ids
-            if eid in self.state.deleted
-            or self.state.labels.get(eid) == "spam"
-        )
-        spam_recall = (spam_correct / len(spam_ids)) if spam_ids else 1.0
+        if not spam_ids:
+            spam_recall = 1.0
+        else:
+            spam_correct = sum(
+                1 for eid in spam_ids
+                if eid in self.state.deleted or self.state.labels.get(eid) == "spam"
+            )
+            spam_recall = spam_correct / len(spam_ids)
 
-        # 3. Reply relevance (keyword match)
+        # 3. Reply relevance
         legit_ids = [eid for eid, info in gt.items() if info["label"] != "spam"]
         reply_score = 0.0
-        if legit_ids and self.state.replies:
+        if legit_ids:
+            hits_sum = 0.0
             for eid in legit_ids:
                 if eid in self.state.replies:
                     reply_text = self.state.replies[eid].lower()
                     kws = gt[eid].get("reply_keywords", [])
                     if kws:
                         hits = sum(1 for kw in kws if kw.lower() in reply_text)
-                        reply_score += hits / len(kws)
-            reply_score /= len(legit_ids)
+                        hits_sum += hits / len(kws)
+            reply_score = hits_sum / len(legit_ids)
 
-        # 4. Escalation recall (hard task)
+        # 4. Escalation recall
         escalate_ids = [eid for eid, info in gt.items() if info["label"] == "escalate"]
-        escalate_recall = 0.0
-        if escalate_ids:
+        if not escalate_ids:
+            escalate_recall = 1.0
+        else:
             esc_correct = sum(
                 1 for eid in escalate_ids
                 if self.state.labels.get(eid) == "escalate"
             )
             escalate_recall = esc_correct / len(escalate_ids)
 
-        # 5. Inbox cleared bonus
+        # 5. Inbox cleared
         processed = (
             set(self.state.labels.keys()) |
             set(self.state.deleted) |
@@ -334,23 +347,28 @@ class EmailTriageEnv:
         inbox_cleared = len(processed) / total
 
         # Weighted final score
-        score = (
-            cfg["label_w"]    * label_acc +
-            cfg["spam_w"]     * spam_recall +
-            cfg["reply_w"]    * reply_score +
-            cfg["escalate_w"] * escalate_recall +
-            cfg["empty_w"]    * inbox_cleared
+        raw_score = (
+            cfg.get("label_w", 0)    * label_acc +
+            cfg.get("spam_w", 0)     * spam_recall +
+            cfg.get("reply_w", 0)    * reply_score +
+            cfg.get("escalate_w", 0) * escalate_recall +
+            cfg.get("empty_w", 0)    * inbox_cleared
         )
-        score = round(min(0.9999, max(0.0001, score)), 4)
+        
+        # Strict (0, 1) mapping: clamp to [0.001, 0.999] as requested
+        def strict_clamp(val):
+            return round(min(0.999, max(0.001, float(val))), 4)
 
+        score = strict_clamp(raw_score)
+        
         return GraderResult(
             score=score,
             breakdown={
-                "label_accuracy":    round(label_acc, 4),
-                "spam_recall":       round(spam_recall, 4),
-                "reply_relevance":   round(reply_score, 4),
-                "escalation_recall": round(escalate_recall, 4),
-                "inbox_cleared":     round(inbox_cleared, 4),
+                "label_accuracy":    strict_clamp(label_acc),
+                "spam_recall":       strict_clamp(spam_recall),
+                "reply_relevance":   strict_clamp(reply_score),
+                "escalation_recall": strict_clamp(escalate_recall),
+                "inbox_cleared":     strict_clamp(inbox_cleared),
             },
             details={
                 "task": self.current_task,
