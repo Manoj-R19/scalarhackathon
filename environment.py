@@ -193,7 +193,7 @@ class EmailTriageEnv:
             if gt_label == "spam":
                 reward = 0.3
             else:
-                reward = -0.4  # deleting legit email penalised hard
+                reward = -0.4  
 
         elif action.type == ActionType.escalate:
             if gt_label == "escalate":
@@ -208,7 +208,7 @@ class EmailTriageEnv:
                 reward = -0.2  # drafting reply to spam is waste
             elif not draft_text:
                 reward = -0.1
-            else:
+            else: 
                 # Keyword match scoring
                 hits = sum(1 for kw in kws if kw.lower() in draft_text)
                 ratio = hits / len(kws) if kws else 0.0
@@ -282,7 +282,7 @@ class EmailTriageEnv:
         gt = self.ground_truth
         total = len(gt)
         if total == 0:
-            return GraderResult(score=0.0, breakdown={})
+            return GraderResult(score=0.0001, breakdown={})
 
         cfg = TASK_CONFIG.get(self.current_task, TASK_CONFIG["easy"])
 
@@ -341,7 +341,7 @@ class EmailTriageEnv:
             cfg["escalate_w"] * escalate_recall +
             cfg["empty_w"]    * inbox_cleared
         )
-        score = round(min(1.0, max(0.0, score)), 4)
+        score = round(min(0.9999, max(0.0001, score)), 4)
 
         return GraderResult(
             score=score,
