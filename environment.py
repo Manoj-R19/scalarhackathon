@@ -79,8 +79,22 @@ class EmailTriageEnv:
         return self._get_obs()
 
     def _safe_normalize(self, score: float, epsilon: float = 0.01) -> float:
-        """Clamp ANY score to strict (epsilon, 1-epsilon)"""
-        return max(epsilon, min(1.0 - epsilon, max(0.0, min(1.0, float(score)))))
+        """Clamp ANY score to strict open interval (epsilon, 1-epsilon).
+        Guaranteed: result is always strictly > 0 and strictly < 1.
+        """
+        try:
+            v = float(score)
+            if v != v:  # NaN
+                v = 0.5
+        except Exception:
+            v = 0.5
+        clamped = max(epsilon, min(1.0 - epsilon, v))
+        # Extra safety: should never be exactly 0 or 1, but guard anyway
+        if clamped <= 0.0:
+            clamped = epsilon
+        if clamped >= 1.0:
+            clamped = 1.0 - epsilon
+        return round(clamped, 4)
 
     # ──────────────── Step ────────────────────────
 
@@ -292,9 +306,21 @@ class EmailTriageEnv:
 
     # ──────────────── Grader ──────────────────────
 
-    def _strict_clamp(self, val: float) -> float:
-        """Ensures val is strictly in (0.01, 0.99) range."""
-        return round(max(0.01, min(0.99, float(val))), 4)
+    def _strict_clamp(self, val) -> float:
+        """Ensures val is strictly in (0.01, 0.99) range. Never 0.0 or 1.0."""
+        try:
+            v = float(val)
+            if v != v:  # NaN guard
+                v = 0.5
+        except Exception:
+            v = 0.5
+        result = round(max(0.01, min(0.99, v)), 4)
+        # Double-check bounds (floating point paranoia)
+        if result <= 0.0:
+            result = 0.01
+        if result >= 1.0:
+            result = 0.99
+        return result
 
     def grader(self) -> GraderResult:
         gt = self.ground_truth
@@ -384,16 +410,24 @@ class EmailTriageEnv:
         )
         
         score = self._strict_clamp(raw_weighted_score)
-        
+
+        # Hard final guard: score MUST be strictly between 0 and 1
+        assert 0.0 < score < 1.0, f"Grader produced boundary score: {score}"
+
+        breakdown = {
+            "label_accuracy":    self._strict_clamp(label_acc),
+            "spam_recall":       self._strict_clamp(spam_recall),
+            "reply_relevance":   self._strict_clamp(reply_score),
+            "escalation_recall": self._strict_clamp(escalate_recall),
+            "inbox_cleared":     self._strict_clamp(inbox_cleared),
+        }
+        # Guard all breakdown values too
+        for k, v in breakdown.items():
+            assert 0.0 < v < 1.0, f"Breakdown '{k}' = {v} is out of range"
+
         return GraderResult(
             score=score,
-            breakdown={
-                "label_accuracy":    self._strict_clamp(label_acc),
-                "spam_recall":       self._strict_clamp(spam_recall),
-                "reply_relevance":   self._strict_clamp(reply_score),
-                "escalation_recall": self._strict_clamp(escalate_recall),
-                "inbox_cleared":     self._strict_clamp(inbox_cleared),
-            },
+            breakdown=breakdown,
             details={
                 "task": self.current_task,
                 "steps_used": str(self.state.step_count),
