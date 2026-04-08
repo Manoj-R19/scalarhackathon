@@ -116,6 +116,6 @@ class StepResult(BaseModel):
 # ─────────────────────────── Grader ───────────────────────────
 
 class GraderResult(BaseModel):
-    score: float = Field(gt=0.0, lt=1.0)
+    score: float = Field(gt=0, lt=1)
     breakdown: Dict[str, float]
     details: Dict[str, str] = {}
