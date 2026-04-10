@@ -111,6 +111,7 @@ class StepResult(BaseModel):
     reward: float
     done: bool
     info: Dict
+    reasoning: Optional[str] = Field(default=None, description="Explanation for the given reward")
 
 
 # ─────────────────────────── Grader ───────────────────────────

@@ -109,7 +109,8 @@ class EmailTriageEnv:
                 observation=obs,
                 reward=self._safe_normalize(-0.5),
                 done=False,
-                info={"error": f"Invalid action JSON: {e}"}
+                info={"error": f"Invalid action JSON: {e}"},
+                reasoning="Failed to parse action JSON."
             )
 
         email_id = action.email_id
@@ -121,23 +122,25 @@ class EmailTriageEnv:
                 observation=obs,
                 reward=self._safe_normalize(-0.2),
                 done=False,
-                info={"error": f"Email '{email_id}' not found in inbox"}
+                info={"error": f"Email '{email_id}' not found in inbox"},
+                reasoning=f"Email ID '{email_id}' does not exist."
             )
 
-        # Prevent re-acting on deleted/archived
+        # Prevent re-acting on deleted/archived (for state-mutating actions)
         if email_id in self.state.deleted or email_id in self.state.archived:
             obs = self._get_obs()
             return StepResult(
                 observation=obs,
                 reward=self._safe_normalize(-0.1),
                 done=False,
-                info={"warning": f"Email '{email_id}' already processed"}
+                info={"warning": f"Email '{email_id}' already processed"},
+                reasoning="Cannot act on archived/deleted emails."
             )
 
-        raw_reward = self._compute_reward(action)
+        raw_reward, reason = self._compute_reward(action)
         
-        # Sparse reward scale [-0.5, 0.5] -> [0, 1]
-        sparse_norm = max(0.0, min(1.0, (raw_reward + 0.5)))
+        # Sparse reward scale [-1.0, 1.0] -> [0, 1]
+        sparse_norm = max(0.0, min(1.0, (raw_reward + 1.0) / 2.0))
         
         # Progressive shaping
         trajectory_progress = len(self.action_history) / MAX_STEPS
@@ -170,7 +173,8 @@ class EmailTriageEnv:
                 "step": self.state.step_count,
                 "task": self.current_task,
                 "action_applied": action.type,
-            }
+            },
+            reasoning=reason
         )
 
     # ──────────────── Internal Helpers ────────────
@@ -198,67 +202,95 @@ class EmailTriageEnv:
         elif action.type == ActionType.archive:
             self.state.archived.append(eid)
 
-    def _compute_reward(self, action: Action) -> float:
+    def _compute_reward(self, action: Action) -> Tuple[float, str]:
         eid = action.email_id
         gt  = self.ground_truth.get(eid, {})
         gt_label = gt.get("label", "")
         reward = 0.0
+        reason = "Neutral action"
+
+        # Redundancy check
+        prev_actions = [a for a in self.action_history if a.email_id == eid and a.action_type == action.type]
+        if prev_actions:
+            return -0.2, f"Redundant {action.type}: You already performed this action on this email."
 
         if action.type == ActionType.label:
             try:
                 label_val = Label(action.value).value
             except ValueError:
-                return -0.3  # completely invalid label string
+                return -0.3, f"Invalid label '{action.value}'. Must be one of {list(Label)}."
 
             if label_val == gt_label:
-                reward = 0.2
-                # Bonus for escalation (hard task)
+                reward = 0.3
+                reason = f"Correctly labeled email as '{label_val}'."
                 if label_val == "escalate":
-                    reward = 0.4
+                    reward = 0.6
+                    reason = "EXCELLENT: Critical issue correctly identified for escalation."
             else:
-                reward = -0.1
+                reward = -0.2
+                reason = f"Incorrect label. Expected '{gt_label}', got '{label_val}'."
 
         elif action.type == ActionType.delete:
             if gt_label == "spam":
-                reward = 0.3
+                reward = 0.4
+                reason = "Correctly deleted spam email."
+            elif gt_label == "escalate":
+                reward = -1.0
+                reason = "CRITICAL ERROR: You deleted a high-priority escalation email! This is a catastrophic failure."
             else:
-                reward = -0.4  
+                reward = -0.5
+                reason = f"Improper deletion: You deleted a legitimate '{gt_label}' priority email."
 
         elif action.type == ActionType.escalate:
             if gt_label == "escalate":
-                reward = 0.4
+                reward = 0.6
+                reason = "Correct escalation of a critical P0 incident."
             else:
-                reward = -0.2
+                reward = -0.3
+                reason = f"False alarm: Escalated a '{gt_label}' priority email that didn't require P0 response."
 
         elif action.type == ActionType.draft:
             draft_text = (action.value or "").lower()
             kws = gt.get("reply_keywords", [])
+            
+            # Contextual check: labeling before drafting is better
+            labeled = eid in self.state.labels
+            label_bonus = 0.05 if labeled else -0.05
+            
             if gt_label == "spam":
-                reward = -0.2  # drafting reply to spam is waste
+                reward = -0.3
+                reason = "Waste of time: Drafting a reply to a known spam email."
             elif not draft_text:
                 reward = -0.1
+                reason = "Empty draft: No content provided."
             else: 
-                # Keyword match scoring
                 hits = sum(1 for kw in kws if kw.lower() in draft_text)
-                ratio = hits / len(kws) if kws else 0.0
+                ratio = hits / len(kws) if kws else 1.0 # 1.0 if no keywords expected
                 length_ok = 10 <= len(draft_text.split()) <= 80
-                reward = 0.1 + (0.2 * ratio) + (0.05 if length_ok else 0)
+                
+                reward = 0.2 + (0.3 * ratio) + (0.1 if length_ok else -0.1) + label_bonus
+                reason = f"Draft relevance score: {ratio:.1%}. "
+                if not length_ok: reason += "Refine length (10-80 words). "
+                if not labeled: reason += "Note: Identify the priority before drafting."
 
         elif action.type == ActionType.archive:
             if gt_label in ("low", "med"):
-                reward = 0.05  # archiving low/med is acceptable
+                reward = 0.1
+                reason = f"Correctly archived {gt_label} priority email."
             elif gt_label == "spam":
-                reward = 0.1   # archiving spam is ok (not as good as delete)
+                reward = 0.1
+                reason = "Archiving spam is acceptable, though deletion is preferred."
             else:
-                reward = -0.1  # archiving high/escalate is wrong
+                reward = -0.3
+                reason = f"Improper archive: A '{gt_label}' email requires active response, not archiving."
 
         # Progress shaped bonus
-        processed = len(self.state.labels) + len(self.state.deleted) + len(self.state.archived)
+        processed = len(set(self.state.labels.keys()) | set(self.state.deleted) | set(self.state.archived))
         total = len(self.state.inbox)
         progress = processed / total if total else 0.0
-        reward += 0.05 * progress
+        reward += 0.1 * progress
 
-        return round(reward, 4)
+        return round(reward, 4), reason
 
     def _is_done(self) -> bool:
         processed = (
