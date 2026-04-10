@@ -54,6 +54,22 @@ tasks:
       escalation_recall: 0.3
       inbox_cleared: 0.1
 
+  - name: "task_expert"
+    description: >
+      Extreme triage of 5 critical edge cases: detect sophisticated phishing,
+      legal subpoenas, and major cloud infrastructure cost anomalies.
+      Mistakes at this level are catastrophic.
+    difficulty: hard
+    grader: "graders.grader_expert"
+    max_steps: 50
+    email_count: 5
+    grader_weights:
+      label_accuracy: 0.2
+      spam_recall: 0.2
+      reply_relevance: 0.2
+      escalation_recall: 0.3
+      inbox_cleared: 0.1
+
 action_space:
   type: structured_json
   schema: |

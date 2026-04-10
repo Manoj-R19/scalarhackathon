@@ -1,5 +1,5 @@
 ---
-title: Email Triage OpenEnv
+title: Email Triage NextGen 🚀
 emoji: 🏆
 colorFrom: blue
 colorTo: indigo
@@ -9,10 +9,10 @@ app_file: app.py
 pinned: false
 ---
 
-# EmailTriage OpenEnv 🏆
+# EmailTriage NextGen 🚀
 
-> **Real-world email support triage benchmark for AI agents.**  
-> Agents learn to classify, prioritize, draft replies, and escalate critical issues — mirroring actual $10B/year customer support workflows.
+> **State-of-the-Art Email Support Triage Benchmark.**  
+> Built for the OpenEnv Scalar Hackathon. Version 2.0 brings a premium visual dashboard, expert-level scenarios, and ultra-robust reward shaping.
 
 [![HF Space](https://img.shields.io/badge/🤗%20HuggingFace-Space-yellow)](https://huggingface.co/spaces)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-Compatible-blue)](https://openenv.dev)
@@ -41,6 +41,7 @@ No existing OpenEnv benchmark covers this domain. This fills a real gap.
 | **easy** | 5 | Binary classify: spam or legit (low/med/high) | Pattern recognition |
 | **medium** | 10 | Prioritize mixed inbox + delete spam | Urgency judgment |
 | **hard** | 15 | Full triage: classify + draft replies + escalate P0s | Compositionality |
+| **expert** | 5 | Extreme cases: phishing, legal, infrastructure cost spikes | Critical Judgment |
 
 ### Grader Weights
 
@@ -51,6 +52,13 @@ No existing OpenEnv benchmark covers this domain. This fills a real gap.
 | Reply Relevance | 0.2 | 0.2 | 0.2 |
 | Escalation Recall | — | — | 0.3 |
 | Inbox Cleared | 0.1 | 0.1 | 0.1 |
+
+## 💎 NextGen Features (v2.0)
+
+-   **Premium Dashboard**: Real-time visual control center at `/ui` (built with Gradio + Custom CSS).
+-   **Expert Difficulty**: High-stakes scenarios including data subpoenas and phishing detection.
+-   **Agent Simulation**: Built-in mock agent to visualize environment transitions and reward signals.
+-   **Bulletproof Graders**: Strict (0, 1) score clamping for seamless OpenEnv integration.
 
 ---
 

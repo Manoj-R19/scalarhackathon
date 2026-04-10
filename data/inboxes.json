@@ -76,5 +76,21 @@
       "h14": {"label": "med", "reply_keywords": ["enterprise", "SLA", "team", "connect", "sales"]},
       "h15": {"label": "med", "reply_keywords": ["rate limit", "API", "adjust", "account", "team"]}
     }
+  },
+  "expert": {
+    "emails": [
+      {"id": "ex1", "subject": "URGENT: Corporate Credential Revocation", "body": "Dear Employee, Your corporate credentials have been flagged for unusual activity. Click here to verify your identity within 1 hour or your access will be permanently revoked: http://corporate-it-verify.security-update.com/login", "sender": "it-security@company-notifications.com"},
+      {"id": "ex2", "subject": "Cloud infrastructure cost anomaly", "body": "Our AWS bill for April is projected to be $145,000, which is 300% above budget. We need a breakdown of RDS and EC2 usage by tag immediately. This is a board-level concern.", "sender": "cfo@enterprise.com"},
+      {"id": "ex3", "subject": "Subpoena for User Data - Case #9921", "body": "Please find attached a legal subpoena regarding user account 'j_doe_99'. We require all login logs and PII by Friday 5 PM UTC as per the court order.", "sender": "legal-notice@doj.gov"},
+      {"id": "ex4", "subject": "New Emoji Suggestion", "body": "Can you add a 'shrug' emoji to the comment section? It would be really helpful for our team comms.", "sender": "happyuser@gmail.com"},
+      {"id": "ex5", "subject": "App Store Review: 1 star - 'Waste of money'", "body": "This app is terrible. It doesn't even open on my phone. I want a refund and I'm telling all my friends to avoid this.", "sender": "angry_customer@icloud.com"}
+    ],
+    "ground_truth": {
+      "ex1": {"label": "spam", "reply_keywords": []},
+      "ex2": {"label": "escalate", "reply_keywords": ["anomaly", "AWS", "budget", "breakdown", "investigating", "finance"]},
+      "ex3": {"label": "escalate", "reply_keywords": ["legal", "subpoena", "compliance", "privacy", "acknowledged"]},
+      "ex4": {"label": "low", "reply_keywords": ["feature", "suggestion", "emoji", "noted", "feedback"]},
+      "ex5": {"label": "high", "reply_keywords": ["refund", "crash", "apology", "resolution", "investigating"]}
+    }
   }
 }

@@ -25,6 +25,7 @@ TASK_CONFIG = {
     "easy":   {"label_w": 0.6, "reply_w": 0.2, "empty_w": 0.1, "spam_w": 0.1, "escalate_w": 0.0},
     "medium": {"label_w": 0.5, "reply_w": 0.2, "empty_w": 0.1, "spam_w": 0.2, "escalate_w": 0.0},
     "hard":   {"label_w": 0.3, "reply_w": 0.2, "empty_w": 0.1, "spam_w": 0.1, "escalate_w": 0.3},
+    "expert": {"label_w": 0.2, "reply_w": 0.2, "empty_w": 0.1, "spam_w": 0.2, "escalate_w": 0.3},
 }
 
 
@@ -90,10 +91,10 @@ class EmailTriageEnv:
             v = 0.5
         clamped = max(epsilon, min(1.0 - epsilon, v))
         # Extra safety: should never be exactly 0 or 1, but guard anyway
-        if clamped <= 0.0:
+        if clamped <= 0:
             clamped = epsilon
-        if clamped >= 1.0:
-            clamped = 1.0 - epsilon
+        if clamped >= 1:
+            clamped = 1 - epsilon
         return round(clamped, 4)
 
     # ──────────────── Step ────────────────────────
@@ -467,5 +468,15 @@ class EmailTriageEnv:
                 "difficulty": "hard",
                 "email_count": len(self._raw_data["hard"]["emails"]),
                 "grader_weights": TASK_CONFIG["hard"],
+            },
+            {
+                "id": "expert",
+                "description": (
+                    "Advanced triage of 5 critical edge cases: detect sophisticated phishing, "
+                    "legal subpoenas, and major infra cost anomalies. High stakes."
+                ),
+                "difficulty": "expert",
+                "email_count": len(self._raw_data["expert"]["emails"]),
+                "grader_weights": TASK_CONFIG["expert"],
             },
         ]

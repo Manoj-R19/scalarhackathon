@@ -6,3 +6,4 @@ openai==1.58.1
 requests==2.32.3
 httpx==0.28.1
 gradio>=5.0.0
+numpy>=1.26.0

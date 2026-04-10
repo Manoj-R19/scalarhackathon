@@ -120,11 +120,23 @@ def grader_hard(state: Any) -> float:
         return 0.5
 
 
+def grader_expert(state: Any) -> float:
+    """
+    Phase 2 grader for task_expert.
+    Accepts ANY state. ALWAYS returns float in (0.01, 0.99).
+    """
+    try:
+        raw = _extract_score(state)
+        return _clamp(raw)
+    except Exception:
+        return 0.5
+
+
 # ─────────────────────────── Batch helper (bonus) ─────────────────────────
 
 def batch_grade(states: list, task: str = "easy") -> np.ndarray:
     """Grade a list of states — returns clamped scores as np.ndarray."""
-    fn = {"easy": grader_easy, "medium": grader_medium, "hard": grader_hard}.get(
+    fn = {"easy": grader_easy, "medium": grader_medium, "hard": grader_hard, "expert": grader_expert}.get(
         task, grader_easy
     )
     return np.array([fn(s) for s in states], dtype=float)

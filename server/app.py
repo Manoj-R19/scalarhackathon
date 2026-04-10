@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 
 from environment import EmailTriageEnv
 from models import Action
+from server.ui_builder import create_ui
 
 # ─────────────────────────── App Init ─────────────────────────
 
@@ -68,12 +69,12 @@ class GraderRequest(BaseModel):
 @app.get("/", tags=["Meta"])
 def root():
     return {
-        "name": "EmailTriage OpenEnv",
-        "version": "1.0.0",
-        "description": "Real-world email support triage benchmark for training AI agents.",
-        "tasks": ["easy", "medium", "hard"],
-        "endpoints": ["/reset", "/step", "/grader", "/tasks", "/state", "/health", "/docs"],
-        "hackathon": "OpenEnv Scalar Hackathon 2025",
+        "name": "EmailTriage NextGen",
+        "version": "2.0.0",
+        "description": "Premium Email Triage Benchmark - Upgrade to Next Level",
+        "ui_dashboard": "/ui",
+        "tasks": ["easy", "medium", "hard", "expert"],
+        "hackathon": "Scalar OpenEnv Hackathon 2025",
     }
 
 
@@ -137,6 +138,10 @@ def get_state():
 @app.get("/action-schema", tags=["Meta"])
 def action_schema():
     return Action.model_json_schema()
+
+
+# ─────────────────────────── UI Mount ────────────────────────
+app = gr.mount_gradio_app(app, create_ui(env), path="/ui")
 
 
 # ─────────────────────────── Main Server ──────────────────────
