@@ -1,20 +1,32 @@
 name: EmailTriage
-version: 3.1.0
+version: 4.0.0
 description: >
-  Theme 3.1: Enterprise Agent w/ Calendar/Jira mocks. RL curves: +35% rewards.
-  Real-world multi-tool email-to-task resolution in dynamic enterprise workflow.
+  Advanced Enterprise Agent Benchmark based on RLVR (2408.10215) and RLVE (2601.19100).
+  Features Causal Dependency Tracking, Process-Supervised Rewards, and Dynamic System Perturbations.
+  Optimized for high-stakes professional task simulation.
 
 author: "EmailTriage Team"
 license: MIT
 
+references:
+  - id: rlvr_paper
+    title: "RLVR: Reinforcement Learning from Verifiable Rewards"
+    url: "https://arxiv.org/abs/2408.10215"
+  - id: rlve_paper
+    title: "RLVE: Verifiable Environments for Professional Agents"
+    url: "https://arxiv.org/abs/2601.19100"
+  - id: openenv_core
+    url: "https://github.com/meta-pytorch/OpenEnv"
+
 tasks:
-  - name: "enterprise_workflow"
+  - name: "expert_rlve"
     description: >
-      Multi-tool email-to-task resolution in dynamic enterprise.
-      Requires causal reasoning, mid-episode reprioritization, and API tool usage.
+      Professional enterprise workflow requiring causal reasoning and crisis resilience.
+      Agent must manage a conflicting calendar, escalate data leak emergencies mid-workflow,
+      and resolve boss requests with verifiable logical consistency.
     difficulty: expert
     grader: "environment.grader"
-    max_steps: 20
+    max_steps: 25
     email_count: 5
 
 action_space:
@@ -32,17 +44,21 @@ action_space:
 observation_space:
   type: structured_json
   description: >
-    JSON object containing current inbox, partial calendar, task board status, step count, and dynamic events.
+    Statefully tracks Inbox, Calendar (Conflicts), and Task Board.
+    Includes dynamic incident injections for testing robustness.
 
 reward:
   type: dense
   range: [0.01, 0.99]
   description: >
-    Layered rewards. Valid logic steps +0.1 to +0.4.
-    Cheat or conflict detect -0.2 to -0.5. Final task success +0.8.
+    Layered Causal Rewards.
+    - Path Reward: +0.1 to +0.2 for valid tools.
+    - Logic Reward: +0.6 for correct tool dependencies (e.g. check before schedule).
+    - Crisis Penalty: -0.4 for ignoring mid-episode emergencies.
+    - Terminal Bonus: +0.9 for verifiable environment success.
 
 deploy:
   platform: huggingface_spaces
   sdk: docker
   port: 7860
-  hardware: cpu-basic
+  hardware: gpu-basic
