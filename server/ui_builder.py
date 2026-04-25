@@ -119,9 +119,14 @@ def create_ui(env: EmailTriageEnv):
             
             last_msg = ""
             for s in steps:
+                # Mocking thought extraction for demo
+                act_obj = json.loads(s)
+                thought = act_obj.get("thought", "Analyzing system state...")
+                
                 res = env.step(s)
-                logs.append(f"✅ **Step {res.info['step']}**: {res.info['action_applied']} | Rew: {res.reward:.3f}")
-                logs.append(f"   > *Reasoning*: {res.reasoning}")
+                logs.append(f"🧠 **Thought**: *{thought}*")
+                logs.append(f"✅ **Action**: {res.info['action_applied']} | Rew: {res.reward:.3f}")
+                logs.append(f"   > *Outcome*: {res.reasoning}")
                 last_msg = f"Rew: {res.reward:.3f} | {res.reasoning}"
                 if res.done: break
             

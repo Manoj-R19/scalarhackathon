@@ -49,6 +49,7 @@ class EmailView(BaseModel):
 # ─────────────────────────── Action ───────────────────────────
 
 class Action(BaseModel):
+    thought: Optional[str] = Field(None, description="Inner reasoning before taking action.")
     tool: Literal["check_calendar", "schedule_meeting", "create_task", "reply_email", "escalate"]
     params: Dict[str, Any] = Field(default_factory=dict)
 
