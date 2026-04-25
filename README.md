@@ -2,7 +2,7 @@
 title: EmailTriage Enterprise Max
 emoji: 🛡️
 colorFrom: indigo
-colorTo: slate
+colorTo: gray
 sdk: docker
 pinned: false
 ---
