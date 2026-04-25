@@ -138,7 +138,16 @@ def action_schema():
 
 
 # ─────────────────────────── UI Mount ────────────────────────
-app = gr.mount_gradio_app(app, create_ui(env), path="/ui")
+# Use more robust mounting for Hugging Face Spaces proxying
+ui_app = create_ui(env)
+app = gr.mount_gradio_app(app, ui_app, path="/ui")
+
+@app.get("/ui")
+def ui_redirect():
+    """Ensure /ui always redirects to the mounted Gradio app."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/ui/")
+
 
 
 # ─────────────────────────── Main Server ──────────────────────
