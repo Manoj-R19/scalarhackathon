@@ -11,6 +11,9 @@ import time
 import random
 import gradio as gr
 
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import uvicorn
 from environment import (
     EmailTriageEnv,
     SovereignAgent,
@@ -498,17 +501,18 @@ Accessible at `/meta` — structured metadata for automated agent discovery.
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3.  META ROUTE  (served at /meta for OpenEnv agent discovery)
+# 3.  API SETUP (FastAPI + Gradio)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _meta_route():
-    import json
-    return json.loads(gradio_meta())
+app = FastAPI()
 
+@app.get("/meta")
+async def get_meta():
+    return JSONResponse(content=json.loads(gradio_meta()))
+
+# Mount Gradio UI to root
+app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        show_error=True,
-    )
+    # Use uvicorn to run the FastAPI app on the HF port
+    uvicorn.run(app, host="0.0.0.0", port=7860)
