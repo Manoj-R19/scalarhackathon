@@ -2,6 +2,7 @@ import json
 import time
 import random
 import gradio as gr
+import plotly.graph_objects as go
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -38,16 +39,30 @@ def gradio_simulate(agent_type, enable_crisis, seed):
         # Professional Metric Dataframe
         df = pd.DataFrame([
             {"Metric": "Success Status", "Value": "✅ SUCCESS" if metrics.get("success") else "❌ FAILED"},
-            {"Metric": "Total Reward", "Value": f"{metrics.get('total_reward', 0):.4f}"},
+            {"Metric": "Reward Accumulation", "Value": f"{metrics.get('total_reward', 0):.4f}"},
             {"Metric": "Logic Accuracy", "Value": f"{metrics.get('avg_logic', 0)*100:.1f}%"},
             {"Metric": "Causal Consistency", "Value": f"{metrics.get('causal_violations', 0)} Violations"},
             {"Metric": "Crisis Mitigation", "Value": "SOLVED" if metrics.get("crisis_resolved") else ("FAILED" if metrics.get("crisis_active") else "N/A")}
         ])
+
+        # Obsidian Chart
+        steps = [s["step"] for s in steps_data]
+        rewards = [s["reward"] for s in steps_data]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=steps, y=rewards, name="Total Reward", line=dict(color='#3b82f6', width=3)))
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=10, r=10, t=30, b=10),
+            height=250,
+            title="Sovereign Reward Trace"
+        )
         
-        return log, df
+        return log, df, fig
         
     except Exception as e:
-        return f"CRITICAL ERROR: {str(e)}", pd.DataFrame([{"Metric": "Error", "Value": "Evaluation Failed"}])
+        return f"CRITICAL ERROR: {str(e)}", pd.DataFrame([{"Metric": "Error", "Value": "Fail"}]), None
 
 def gradio_benchmark(episodes):
     try:
@@ -92,10 +107,11 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="blue", neutral_hue="slate"),
                 
                 with gr.Column(scale=1):
                     metrics = gr.Dataframe(label="Intelligence Metrics", interactive=False)
+                    chart = gr.Plot(label="Performance Visualisation")
 
             log = gr.Textbox(label="Reasoned Action Log", lines=20, elem_classes=["mono-log"])
             
-            run.click(gradio_simulate, [agent, crisis, seed], [log, metrics])
+            run.click(gradio_simulate, [agent, crisis, seed], [log, metrics, chart])
 
         with gr.Tab("Benchmark"):
             n_ep = gr.Slider(5, 50, 10, step=5, label="Evaluation Count")
