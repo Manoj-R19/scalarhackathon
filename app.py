@@ -27,123 +27,67 @@ from environment import (
 # ─────────────────────────────────────────────────────────────────────────────
 
 CUSTOM_CSS = """
-/* ─── Global Reset & Base ───────────────────────── */
 :root {
-  --bg-main:      #0f172a;
-  --bg-card:      #1e293b;
-  --border-dim:   #334155;
-  --accent-blue:  #38bdf8;
-  --accent-purp:  #818cf8;
-  --stat-green:   #4ade80;
-  --stat-red:     #f87171;
-  --stat-warn:    #fbbf24;
-  --text-primary: #f8fafc;
-  --text-secondary:#94a3b8;
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --border: #334155;
+  --accent: #3b82f6;
+  --text: #f8fafc;
 }
 
 body, .gradio-container {
-  background-color: var(--bg-main) !important;
-  color: var(--text-primary) !important;
-  font-family: 'Inter', system-ui, sans-serif !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Inter', sans-serif !important;
 }
 
-/* ─── Header ───────────────────────────────────── */
 .sovereign-header {
-  padding: 2.5rem 1rem;
-  text-align: left;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.sovereign-header h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-  margin-bottom: 0.25rem;
-}
-.sovereign-header p {
-  color: var(--text-secondary);
-  font-size: 1rem;
+  padding: 2rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
 }
 
-/* ─── Metric Grid (4 Columns) ──────────────────── */
 .metric-grid {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
-  gap: 1rem !important;
-  margin: 1.5rem 0 !important;
+  gap: 15px !important;
 }
 
 .metric-card {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border-dim) !important;
-  border-top: 4px solid var(--accent-blue) !important;
-  border-radius: 12px !important;
-  padding: 1.25rem !important;
-  text-align: left !important;
-  transition: all 0.2s ease !important;
+  background: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  padding: 1.5rem !important;
+  border-radius: 8px !important;
+  text-align: center !important;
 }
-.metric-card:hover {
-  background: #243046 !important;
-  transform: translateY(-3px);
-}
-
-/* Status-specific top borders */
-.metric-card.good { border-top-color: var(--stat-green) !important; }
-.metric-card.bad  { border-top-color: var(--stat-red) !important; }
-.metric-card.warn { border-top-color: var(--stat-warn) !important; }
 
 .metric-card .label {
-  font-size: 0.7rem !important;
-  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  color: var(--text-secondary) !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 8px !important;
 }
+
 .metric-card .value {
-  font-size: 1.4rem !important;
-  font-weight: 800 !important;
-  color: #fff !important;
-  font-family: 'JetBrains Mono', monospace !important;
-}
-
-/* ─── Step Log ─────────────────────────────────── */
-.step-log {
-  background: #020617 !important;
-  border: 1px solid var(--border-dim) !important;
-  border-radius: 12px !important;
-  padding: 1.5rem !important;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 0.85rem !important;
-  color: #cbd5e1 !important;
-  line-height: 1.6 !important;
-}
-
-/* ─── Buttons ─────────────────────────────────── */
-.gr-button-primary {
-  background: #2563eb !important;
-  border: none !important;
-  border-radius: 8px !important;
+  font-size: 1.5rem !important;
   font-weight: 700 !important;
   color: #fff !important;
 }
-.gr-button-primary:hover {
-  background: #1d4ed8 !important;
+
+.step-log {
+  background: #000 !important;
+  border: 1px solid var(--border) !important;
+  font-family: monospace !important;
+  font-size: 0.9rem !important;
+  padding: 1rem !important;
+  border-radius: 8px !important;
 }
 
-/* ─── Tabs ────────────────────────────────────── */
-.gradio-tabs {
-  background: transparent !important;
+.gr-button-primary {
+  background: var(--accent) !important;
   border: none !important;
-}
-.tab-nav button {
-  border-bottom: 2px solid transparent !important;
   font-weight: 600 !important;
-}
-.tab-nav button.selected {
-  color: var(--accent-blue) !important;
-  border-bottom-color: var(--accent-blue) !important;
 }
 """
 
