@@ -1,14 +1,14 @@
-fastapi==0.115.0
-uvicorn==0.32.0
-pydantic==2.9.2
-gradio==5.7.0
-trl==0.9.6
-datasets==3.0.1
+fastapi
+uvicorn
+pydantic
+gradio
+trl
+datasets
 torch --index-url https://download.pytorch.org/whl/cpu
-openenv-core==0.3.0
-pytest==8.3.3
-tensorboard==2.19.0
-plotly==5.24.0
+openenv-core
+pytest
+tensorboard
+plotly
 numpy
 requests
 httpx
