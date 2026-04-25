@@ -5,6 +5,7 @@ import gradio as gr
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
+import pandas as pd
 
 from environment import (
     EmailTriageEnv,
@@ -15,69 +16,114 @@ from environment import (
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1.  SIMULATION LOGIC (V5 Logic, V4 Simplicity)
+# 1.  SIMULATION LOGIC
 # ─────────────────────────────────────────────────────────────────────────────
 
 def gradio_simulate(agent_type, enable_crisis, seed):
-    env = EmailTriageEnv(enable_crisis=enable_crisis, seed=int(seed))
-    agent = SovereignAgent() if "Sovereign" in agent_type else BaselineAgent()
-    
-    metrics = run_episode(agent, env, verbose=False)
-    steps_data = metrics.pop("steps_data", [])
+    try:
+        env = EmailTriageEnv(enable_crisis=enable_crisis, seed=int(seed))
+        agent = SovereignAgent() if "Sovereign" in agent_type else BaselineAgent()
+        
+        metrics = run_episode(agent, env, verbose=False)
+        steps_data = metrics.pop("steps_data", [])
 
-    # Simple formatted log
-    log = f"=== {agent_type.upper()} EPISODE (Seed {seed}) ===\n\n"
-    for s in steps_data:
-        causal = "✓" if s['causal_ok'] else "✗ BLOCK"
-        crisis = "🚨" if s['crisis_active'] else ""
-        log += f"Step {s['step']:02d} | {s['tool']:<20} | R={s['reward']:+.2f} | Causal={causal} {crisis}\n"
-        log += f"  Thought: {s['thought'][:80]}...\n\n"
-    
-    # Simple dictionary for the standard Gradio Label/JSON components
-    summary_metrics = {
-        "Result": "✅ SUCCESS" if metrics.get("success") else "❌ FAILED",
-        "Total Reward": round(metrics.get("total_reward", 0), 3),
-        "Causal Violations": metrics.get("causal_violations", 0),
-        "Logic Score": round(metrics.get("avg_logic", 0), 3),
-        "Tasks Done": metrics.get("tasks_completed", 0),
-        "Crisis Status": "RESOLVED" if metrics.get("crisis_resolved") else ("MISSED" if metrics.get("crisis_active") else "N/A")
-    }
-    
-    return log, summary_metrics
+        # 📋 PREPARE LOG
+        log_header = f"🚀 {agent_type.upper()} SESSION STARTED\n"
+        log_header += f"Environment Seed: {int(seed)} | Crisis: {'Active' if enable_crisis else 'Inactive'}\n"
+        log_header += "─" * 60 + "\n\n"
+        
+        log_steps = []
+        for s in steps_data:
+            causal = "✓" if s['causal_ok'] else "✗ BLOCK"
+            crisis = "🚨" if s['crisis_active'] else ""
+            line = f"Step {s['step']:02d} | {s['tool']:<18} | R={s['reward']:+.2f} | {causal} {crisis}\n"
+            line += f"  Thought: {s['thought'][:90]}...\n"
+            log_steps.append(line)
+        
+        full_log = log_header + "\n".join(log_steps)
+        
+        # 📊 PREPARE METRICS TABLE
+        df_metrics = pd.DataFrame([
+            {"Metric": "Episode Result", "Value": "✅ SUCCESS" if metrics.get("success") else "❌ FAILED"},
+            {"Metric": "Reward Accumulation", "Value": f"{metrics.get('total_reward', 0):.3f}"},
+            {"Metric": "Logic Consistency", "Value": f"{metrics.get('avg_logic', 0)*100:.1f}%"},
+            {"Metric": "Outcome Accuracy", "Value": f"{metrics.get('avg_outcome', 0)*100:.1f}%"},
+            {"Metric": "Causal Violations", "Value": str(metrics.get("causal_violations", 0))},
+            {"Metric": "Crisis Mitigation", "Value": "RESOLVED" if metrics.get("crisis_resolved") else ("MISSED" if metrics.get("crisis_active") else "NONE")},
+        ])
+        
+        return full_log, df_metrics
+        
+    except Exception as e:
+        return f"Error during simulation: {str(e)}", pd.DataFrame([{"Metric": "Error", "Value": str(e)}])
 
 
 def gradio_benchmark(n_episodes):
-    results = benchmark(n_episodes=int(n_episodes))
-    return results
+    try:
+        results = benchmark(n_episodes=int(n_episodes))
+        b, s = results["baseline"], results["sovereign"]
+        
+        comp_df = pd.DataFrame([
+            {"Metric": "Success Rate", "Baseline": f"{b['success_rate']*100:.1f}%", "Sovereign": f"{s['success_rate']*100:.1f}%"},
+            {"Metric": "Avg Reward", "Baseline": f"{b['avg_reward']:.3f}", "Sovereign": f"{s['avg_reward']:.3f}"},
+            {"Metric": "Logic Score", "Baseline": f"{b['avg_logic']:.3f}", "Sovereign": f"{s['avg_logic']:.3f}"},
+            {"Metric": "Crisis Resolve Rate", "Baseline": f"{b['crisis_resolve_rate']*100:.1f}%", "Sovereign": f"{s['crisis_resolve_rate']*100:.1f}%"},
+            {"Metric": "Causal Violations", "Baseline": f"{b['avg_causal_violations']:.1f}", "Sovereign": f"{s['avg_causal_violations']:.1f}"},
+        ])
+        return comp_df
+    except Exception as e:
+        return pd.DataFrame([{"Metric": "Error", "Value": str(e)}])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2.  CLEAN GRADIO UI (No custom CSS)
+# 2.  "DEEP AZURE" GRADIO UI
 # ─────────────────────────────────────────────────────────────────────────────
 
-with gr.Blocks(title="EmailTriage Sovereign Agent") as demo:
+# Clean professional styles
+CUSTOM_CSS = """
+.container { max-width: 1100px; margin: auto; padding-top: 2rem; }
+.header { text-align: center; margin-bottom: 2rem; }
+.header h1 { font-size: 2.2rem; font-weight: 800; color: #1e3a8a; }
+.header p { font-size: 1rem; color: #64748b; }
+.log-box textarea { font-family: 'JetBrains Mono', monospace !important; font-size: 0.85rem !important; line-height: 1.5 !important; }
+"""
+
+with gr.Blocks(
+    title="EmailTriage Sovereign Agent",
+    theme=gr.themes.Soft(primary_hue="blue", secondary_hue="slate"),
+    css=CUSTOM_CSS
+) as demo:
     
-    gr.Markdown("# 🛡️ EmailTriage Sovereign Agent v5.0.0")
-    gr.Markdown("Enterprise-grade RL agent with verifiable reasoning and causal grounding.")
+    with gr.Div(elem_classes=["header"]):
+        gr.Markdown("# 🛡️ EmailTriage Sovereign Agent")
+        gr.Markdown("v5.0.0 · Enterprise AI Reasoning Engine · Verified by OpenEnv")
 
     with gr.Tabs():
-        with gr.Tab("🎬 Live Simulation"):
+        with gr.Tab("💠 Live Simulation"):
             with gr.Row():
                 with gr.Column(scale=1):
-                    agent_selector = gr.Radio(
-                        choices=["🛡️ Sovereign Agent", "🔴 Baseline Agent"],
-                        value="🛡️ Sovereign Agent",
-                        label="Select Agent"
+                    agent_selector = gr.Dropdown(
+                        choices=["🛡️ Sovereign (Research Agent)", "🔴 Baseline (Standard LLM)"],
+                        value="🛡️ Sovereign (Research Agent)",
+                        label="Agent Type"
                     )
-                    crisis_toggle = gr.Checkbox(value=True, label="Enable Crisis injection")
-                    seed_input = gr.Number(value=42, label="Environment Seed")
-                    run_btn = gr.Button("Run Simulation", variant="primary")
+                    crisis_toggle = gr.Checkbox(value=True, label="Enable High-Entropy Crisis Injection")
+                    seed_input = gr.Slider(0, 999, value=42, step=1, label="Environment Seed")
+                    run_btn = gr.Button("▶ Run Episode", variant="primary")
                 
                 with gr.Column(scale=1):
-                    # Using standard Gradio Label for metrics (clean and reliable)
-                    metrics_output = gr.Label(label="Episode Summary")
+                    metrics_output = gr.Dataframe(
+                        headers=["Metric", "Value"],
+                        datatype=["str", "str"],
+                        label="Episode Intelligence Report",
+                        interactive=False
+                    )
 
-            log_output = gr.Textbox(label="Action Log", lines=20)
+            log_output = gr.Textbox(
+                label="Step-by-Step Reasoned Trace",
+                lines=18,
+                elem_classes=["log-box"]
+            )
 
             run_btn.click(
                 fn=gradio_simulate,
@@ -85,34 +131,41 @@ with gr.Blocks(title="EmailTriage Sovereign Agent") as demo:
                 outputs=[log_output, metrics_output]
             )
 
-        with gr.Tab("📊 Benchmark"):
-            n_ep = gr.Slider(5, 50, value=20, step=5, label="Episodes per Agent")
-            bench_btn = gr.Button("Run Benchmark")
-            bench_out = gr.JSON(label="Comparative Results")
-            bench_btn.click(fn=gradio_benchmark, inputs=[n_ep], outputs=[bench_out])
+        with gr.Tab("📈 Performance Benchmarking"):
+            gr.Markdown("Stochastic evaluation across multiple environment seeds.")
+            n_ep = gr.Slider(5, 100, value=20, step=5, label="Evaluation Episodes")
+            bench_btn = gr.Button("🏁 Run Benchmark Comparison", variant="primary")
+            bench_table = gr.Dataframe(label="Comparative Metrics")
+            
+            bench_btn.click(fn=gradio_benchmark, inputs=[n_ep], outputs=[bench_table])
 
-        with gr.Tab("🏗️ Architecture"):
+        with gr.Tab("🔬 Architecture & Metadata"):
             gr.Markdown("""
-            ### Sovereign Agent Framework
-            - **Environment**: RLVE (Verifiable Environment) with Causal Gates.
-            - **Reward**: RLVR (Verifiable Reward) - Multi-headed logic.
-            - **Optimization**: GRPO v2 (Group Relative Policy Optimisation).
-            - **Base Model**: Qwen2.5-7B-Instruct.
+            ### Sovereign Agent v5.0.0
+            
+            **Framework Implementation:**
+            - **RLVE**: Verifiable Environments with strict causal gates (Check-before-Act).
+            - **RLVR**: Verifiable Rewards with multi-headed process signals.
+            - **Algorithm**: GRPO v2 (Group Relative Policy Optimisation).
+            
+            **Hardware & Model:**
+            - **Model**: Qwen2.5-7B (Unsloth 4-bit LoRA).
+            - **Deployment**: Dockerized FastAPI + Uvicorn.
             """)
+            
+            meta_btn = gr.Button("Get Discovery Metadata", size="sm")
+            meta_out = gr.JSON(label="OpenEnv Endpoint")
+            meta_btn.click(fn=lambda: {"name": "EmailTriage", "version": "5.0.0", "engine": "GRPO v2"}, outputs=[meta_out])
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3.  API SETUP
+# 3.  FASTAPI BACKEND
 # ─────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI()
 
 @app.get("/meta")
 async def get_meta():
-    return JSONResponse(content={
-        "name": "EmailTriage Sovereign Agent",
-        "version": "5.0.0",
-        "compliance": "OpenEnv v0.3.0"
-    })
+    return JSONResponse(content={"status": "ready", "agent": "sovereign_v5", "compliance": "v0.3.0"})
 
 app = gr.mount_gradio_app(app, demo, path="/")
 
