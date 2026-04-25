@@ -10,7 +10,7 @@ import json
 import time
 import random
 import gradio as gr
-
+import plotly.graph_objects as go
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -232,7 +232,30 @@ def gradio_simulate(agent_type, enable_crisis, seed):
   </div>
 </div>
 """
-    return log, summary_html
+    return log, summary_html, create_reward_chart(steps)
+
+
+def create_reward_chart(steps_data):
+    steps = [s["step"] for s in steps_data]
+    rewards = [s["reward"] for s in steps_data]
+    logic = [s["logic"] for s in steps_data]
+    outcome = [s["outcome"] for s in steps_data]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=steps, y=rewards, name="Total Reward", line=dict(color='#00e5ff', width=3)))
+    fig.add_trace(go.Scatter(x=steps, y=logic, name="Logic Alignment", line=dict(color='#7c3aed', dash='dot')))
+    fig.add_trace(go.Scatter(x=steps, y=outcome, name="Outcome Success", line=dict(color='#10b981', dash='dash')))
+
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=300,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        title="Live Reward Decomposition"
+    )
+    return fig
 
 
 def gradio_benchmark(n_episodes):
@@ -382,6 +405,7 @@ with gr.Blocks(
 
                 with gr.Column(scale=2):
                     metrics_html = gr.HTML(label="Episode Metrics")
+                    reward_plot = gr.Plot(label="Reward Analytics")
 
             step_log = gr.Textbox(
                 label="Step-by-Step Trace",
@@ -394,7 +418,7 @@ with gr.Blocks(
             run_btn.click(
                 fn=gradio_simulate,
                 inputs=[agent_selector, crisis_toggle, seed_slider],
-                outputs=[step_log, metrics_html],
+                outputs=[step_log, metrics_html, reward_plot],
             )
 
         # Tab 2: Benchmark
