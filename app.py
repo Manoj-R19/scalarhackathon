@@ -27,118 +27,125 @@ from environment import (
 # ─────────────────────────────────────────────────────────────────────────────
 
 CUSTOM_CSS = """
-/* ─── Global ─────────────────────────────────────── */
+/* ─── Global Base ────────────────────────────────── */
 :root {
-  --bg-dark:    #0a0e1a;
-  --bg-panel:   #111827;
-  --bg-card:    #1c2433;
-  --accent:     #00e5ff;
-  --accent2:    #7c3aed;
-  --success:    #10b981;
-  --danger:     #ef4444;
-  --warning:    #f59e0b;
-  --text:       #e2e8f0;
-  --text-dim:   #94a3b8;
-  --border:     #2d3748;
-  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+  --bg-dark:       #020617;
+  --bg-gradient:   linear-gradient(180deg, #020617 0%, #000000 100%);
+  --glass-bg:      rgba(15, 23, 42, 0.6);
+  --glass-border:  rgba(255, 255, 255, 0.08);
+  --accent:        #00e5ff;
+  --accent-glow:   rgba(0, 229, 255, 0.3);
+  --accent2:       #7c3aed;
+  --accent2-glow:  rgba(124, 58, 237, 0.3);
+  --success:       #10b981;
+  --danger:        #f43f5e;
+  --warning:       #f59e0b;
+  --text-main:     #f8fafc;
+  --text-dim:      #94a3b8;
+  --font-mono:     'JetBrains Mono', monospace;
 }
 
 body, .gradio-container {
-  background: var(--bg-dark) !important;
-  color: var(--text) !important;
-  font-family: 'Inter', sans-serif !important;
+  background: var(--bg-gradient) !important;
+  color: var(--text-main) !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
 }
 
-/* ─── Header ─────────────────────────────────────── */
+/* ─── Glassmorphism Containers ──────────────────── */
+.gradio-container { border: none !important; }
+.metric-card, .step-log, .gradio-tabs {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+
+/* ─── Header Styling ───────────────────────────── */
 .sovereign-header {
+  padding: 3rem 1rem 2rem;
   text-align: center;
-  padding: 2rem 1rem 1rem;
-  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a0e1a 100%);
-  border-bottom: 1px solid var(--border);
 }
 .sovereign-header h1 {
-  font-size: 2.4rem;
-  font-weight: 800;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  background: linear-gradient(90deg, #fff 20%, var(--accent) 50%, var(--accent2) 80%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin: 0;
-  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.2));
 }
 .sovereign-header p {
   color: var(--text-dim);
-  font-size: 0.95rem;
-  margin-top: 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 500;
 }
+
+/* ─── Custom Badges ────────────────────────────── */
 .badge {
-  display: inline-block;
-  padding: 0.2em 0.75em;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin: 0.2rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid transparent;
 }
-.badge-cyan  { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
-.badge-purple{ background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
-.badge-green { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.badge-cyan  { background: rgba(0,229,255,0.1); color: var(--accent); border-color: rgba(0,229,255,0.2); box-shadow: 0 0 10px var(--accent-glow); }
+.badge-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border-color: rgba(124,58,237,0.2); }
+.badge-green  { background: rgba(16,185,129,0.1); color: var(--success); border-color: rgba(16,185,129,0.2); }
 
-/* ─── Step Log ───────────────────────────────────── */
+/* ─── Step Log Overhaul ───────────────────────── */
 .step-log {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  background: #060a14;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  max-height: 420px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  color: #cbd5e1;
-  line-height: 1.7;
+  border: 1px solid rgba(0, 229, 255, 0.1) !important;
+  padding: 1.5rem !important;
+  font-size: 0.85rem !important;
+  color: #e2e8f0 !important;
+  background: rgba(2, 6, 23, 0.8) !important;
 }
 
-/* ─── Metric Cards ───────────────────────────────── */
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-  margin: 0.5rem 0;
-}
+/* ─── Metric Cards ────────────────────────────── */
 .metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
+  padding: 1.25rem !important;
+  transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 229, 255, 0.3) !important;
 }
 .metric-card .value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  color: var(--accent);
+  font-size: 1.6rem !important;
+  background: linear-gradient(135deg, #fff, var(--text-dim));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-.metric-card .label {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-top: 0.3rem;
-}
-.metric-card.good  .value { color: var(--success); }
-.metric-card.warn  .value { color: var(--warning); }
-.metric-card.bad   .value { color: var(--danger);  }
+.metric-card.good .value { background: linear-gradient(135deg, #fff, var(--success)); -webkit-background-clip: text; }
+.metric-card.bad  .value { background: linear-gradient(135deg, #fff, var(--danger)); -webkit-background-clip: text; }
 
-/* ─── Buttons ────────────────────────────────────── */
+/* ─── Buttons ─────────────────────────────────── */
 .gr-button-primary {
-  background: linear-gradient(135deg, #0891b2, #7c3aed) !important;
-  border: none !important;
-  color: white !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.03em !important;
-  transition: opacity 0.2s !important;
+  background: linear-gradient(135deg, var(--accent2), #581c87) !important;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  font-weight: 800 !important;
+  transition: all 0.3s ease !important;
 }
-.gr-button-primary:hover { opacity: 0.88 !important; }
+.gr-button-primary:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px var(--accent2-glow) !important;
+  transform: scale(1.02);
+}
+
+/* ─── Tab Styling ─────────────────────────────── */
+.gradio-tabs { border: none !important; }
+.tab-nav button.selected {
+  color: var(--accent) !important;
+  border-bottom: 2px solid var(--accent) !important;
+  background: rgba(0, 229, 255, 0.05) !important;
+}
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
