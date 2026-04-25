@@ -1,13 +1,14 @@
 """
-server/app.py — Global Standardized OpenEnv Server
+server/app.py — Global Standardized OpenEnv Server (v4.0.5)
+Refactored for ROOT UI landing page to fix HF 404 errors.
 """
 from __future__ import annotations
 import sys
 import os
 import gradio as gr
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse
 
 # Ensure root directory is in sys.path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +20,7 @@ from models import Action
 from server.ui_builder import create_ui
 
 # 1. Initialize Core App
-app = FastAPI(title="EmailTriage Enterprise Simulator", version="4.0.0")
+app = FastAPI(title="EmailTriage Enterprise Simulator", version="4.0.5")
 env = EmailTriageEnv()
 
 app.add_middleware(
@@ -29,14 +30,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Discovery Metadata (Root JSON)
-@app.get("/")
-def root():
+# 2. Discovery Metadata Endpoint
+@app.get("/meta")
+def get_metadata():
+    """Discovery Metadata for OpenEnv Agents."""
     return {
         "name": "EmailTriage Enterprise Max",
         "version": "4.0.0",
         "motive": "Democratize RL post-training via isolated, verifiable enterprise workflows.",
-        "ui_dashboard": "/dashboard/",
+        "ui_dashboard": "/",
         "tasks": ["expert"],
         "openenv_compliance": "v0.3.0",
         "references": [
@@ -64,15 +66,13 @@ def grader():
 def get_state():
     return env.get_state().model_dump()
 
-# 4. Gradio Dashboard Mount
-# We use /dashboard/ to ensure we don't conflict with any HF /ui or internal routes
+# 4. Gradio Dashboard Mount at ROOT
+# HF Spaces expect the main UI to be at / for the landing page
 ui_app = create_ui(env)
-app = gr.mount_gradio_app(app, ui_app, path="/dashboard")
+app = gr.mount_gradio_app(app, ui_app, path="/")
 
-# Add a helper redirect for /dashboard (no slash)
-@app.get("/dashboard")
-def redirect_to_dashboard():
-    return RedirectResponse(url="/dashboard/")
+# Note: Any requests to / will now be caught by Gradio. 
+# FastAPI endpoints like /meta, /reset, /step still work as they are defined BEFORE the mount.
 
 def main():
     import uvicorn
