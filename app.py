@@ -27,124 +27,123 @@ from environment import (
 # ─────────────────────────────────────────────────────────────────────────────
 
 CUSTOM_CSS = """
-/* ─── Global Base ────────────────────────────────── */
+/* ─── Global Reset & Base ───────────────────────── */
 :root {
-  --bg-dark:       #020617;
-  --bg-gradient:   linear-gradient(180deg, #020617 0%, #000000 100%);
-  --glass-bg:      rgba(15, 23, 42, 0.6);
-  --glass-border:  rgba(255, 255, 255, 0.08);
-  --accent:        #00e5ff;
-  --accent-glow:   rgba(0, 229, 255, 0.3);
-  --accent2:       #7c3aed;
-  --accent2-glow:  rgba(124, 58, 237, 0.3);
-  --success:       #10b981;
-  --danger:        #f43f5e;
-  --warning:       #f59e0b;
-  --text-main:     #f8fafc;
-  --text-dim:      #94a3b8;
-  --font-mono:     'JetBrains Mono', monospace;
+  --bg-main:      #0f172a;
+  --bg-card:      #1e293b;
+  --border-dim:   #334155;
+  --accent-blue:  #38bdf8;
+  --accent-purp:  #818cf8;
+  --stat-green:   #4ade80;
+  --stat-red:     #f87171;
+  --stat-warn:    #fbbf24;
+  --text-primary: #f8fafc;
+  --text-secondary:#94a3b8;
 }
 
 body, .gradio-container {
-  background: var(--bg-gradient) !important;
-  color: var(--text-main) !important;
-  font-family: 'Inter', -apple-system, sans-serif !important;
+  background-color: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* ─── Glassmorphism Containers ──────────────────── */
-.gradio-container { border: none !important; }
-.metric-card, .step-log, .gradio-tabs {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-}
-
-/* ─── Header Styling ───────────────────────────── */
+/* ─── Header ───────────────────────────────────── */
 .sovereign-header {
-  padding: 3rem 1rem 2rem;
-  text-align: center;
+  padding: 2.5rem 1rem;
+  text-align: left;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 .sovereign-header h1 {
-  font-size: 3rem;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  background: linear-gradient(90deg, #fff 20%, var(--accent) 50%, var(--accent2) 80%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
-  filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.2));
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin-bottom: 0.25rem;
 }
 .sovereign-header p {
-  color: var(--text-dim);
-  font-size: 1.1rem;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
-/* ─── Custom Badges ────────────────────────────── */
-.badge {
-  padding: 0.3rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: 1px solid transparent;
-}
-.badge-cyan  { background: rgba(0,229,255,0.1); color: var(--accent); border-color: rgba(0,229,255,0.2); box-shadow: 0 0 10px var(--accent-glow); }
-.badge-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border-color: rgba(124,58,237,0.2); }
-.badge-green  { background: rgba(16,185,129,0.1); color: var(--success); border-color: rgba(16,185,129,0.2); }
-
-/* ─── Step Log Overhaul ───────────────────────── */
-.step-log {
-  border: 1px solid rgba(0, 229, 255, 0.1) !important;
-  padding: 1.5rem !important;
-  font-size: 0.85rem !important;
-  color: #e2e8f0 !important;
-  background: rgba(2, 6, 23, 0.8) !important;
+/* ─── Metric Grid (4 Columns) ──────────────────── */
+.metric-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1rem !important;
+  margin: 1.5rem 0 !important;
 }
 
-/* ─── Metric Cards ────────────────────────────── */
 .metric-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-top: 4px solid var(--accent-blue) !important;
+  border-radius: 12px !important;
   padding: 1.25rem !important;
-  transition: transform 0.2s ease, border-color 0.2s ease !important;
+  text-align: left !important;
+  transition: all 0.2s ease !important;
 }
 .metric-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(0, 229, 255, 0.3) !important;
+  background: #243046 !important;
+  transform: translateY(-3px);
+}
+
+/* Status-specific top borders */
+.metric-card.good { border-top-color: var(--stat-green) !important; }
+.metric-card.bad  { border-top-color: var(--stat-red) !important; }
+.metric-card.warn { border-top-color: var(--stat-warn) !important; }
+
+.metric-card .label {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.5rem !important;
 }
 .metric-card .value {
-  font-size: 1.6rem !important;
-  background: linear-gradient(135deg, #fff, var(--text-dim));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  font-family: 'JetBrains Mono', monospace !important;
 }
-.metric-card.good .value { background: linear-gradient(135deg, #fff, var(--success)); -webkit-background-clip: text; }
-.metric-card.bad  .value { background: linear-gradient(135deg, #fff, var(--danger)); -webkit-background-clip: text; }
+
+/* ─── Step Log ─────────────────────────────────── */
+.step-log {
+  background: #020617 !important;
+  border: 1px solid var(--border-dim) !important;
+  border-radius: 12px !important;
+  padding: 1.5rem !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.85rem !important;
+  color: #cbd5e1 !important;
+  line-height: 1.6 !important;
+}
 
 /* ─── Buttons ─────────────────────────────────── */
 .gr-button-primary {
-  background: linear-gradient(135deg, var(--accent2), #581c87) !important;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #2563eb !important;
+  border: none !important;
   border-radius: 8px !important;
-  font-weight: 800 !important;
-  transition: all 0.3s ease !important;
+  font-weight: 700 !important;
+  color: #fff !important;
 }
 .gr-button-primary:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 20px var(--accent2-glow) !important;
-  transform: scale(1.02);
+  background: #1d4ed8 !important;
 }
 
-/* ─── Tab Styling ─────────────────────────────── */
-.gradio-tabs { border: none !important; }
+/* ─── Tabs ────────────────────────────────────── */
+.gradio-tabs {
+  background: transparent !important;
+  border: none !important;
+}
+.tab-nav button {
+  border-bottom: 2px solid transparent !important;
+  font-weight: 600 !important;
+}
 .tab-nav button.selected {
-  color: var(--accent) !important;
-  border-bottom: 2px solid var(--accent) !important;
-  background: rgba(0, 229, 255, 0.05) !important;
+  color: var(--accent-blue) !important;
+  border-bottom-color: var(--accent-blue) !important;
 }
 """
 
