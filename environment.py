@@ -228,7 +228,7 @@ class EmailTriageEnv:
             reward = self._score(outcome=0.0, logic=0.0, fmt=0.0, crisis=0.0,
                                  reason=f"FORMAT_ERROR: {format_err}")
             s.total_reward += reward
-            return self._observe(), reward, self._check_done(), {"error": format_err}
+            return self._observe(), reward, self._check_done(), {"error": format_err, "thought": action.get("thought", ""), "step": s.step, "tool": "format_error", "causal_ok": False, "logic_score": 0.0, "outcome_score": 0.0, "crisis_active": s.crisis_active}
 
         tool = action["tool"]
         args = action.get("args", {})
@@ -270,6 +270,7 @@ class EmailTriageEnv:
         info = {
             "step": s.step,
             "tool": tool,
+            "thought": thought,
             "causal_ok": causal_ok,
             "logic_score": logic_score,
             "outcome_score": outcome_score,
