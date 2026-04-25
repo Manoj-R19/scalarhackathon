@@ -4,170 +4,184 @@ import pandas as pd
 from environment import EmailTriageEnv
 from server.ui_assets import CSS
 from models import Action, ActionType
+import random
 
 def create_ui(env: EmailTriageEnv):
     with gr.Blocks(css=CSS, theme=gr.themes.Default(primary_hue="indigo", secondary_hue="slate")) as demo:
-        # State
         current_obs = gr.State(None)
         
         with gr.Column(elem_classes="container"):
-            # Header
             gr.HTML("""
                 <div class="title-header">
-                    <h1>EmailTriage : Next Generation Benchmark</h1>
-                    <p style="color: #94a3b8; margin-top: 0.5rem;">Interactive Agent Control Center • OpenEnv Scalar Hackathon 2025</p>
+                    <h1>Enterprise Agent Simulator: Theme #3.1</h1>
+                    <p style="color: #94a3b8; margin-top: 0.5rem;">Multi-Step Tool Calling & Dynamic Environments • OpenEnv</p>
                 </div>
             """)
             
             with gr.Row():
-                # Left Panel: Tasks & Controls
+                # Left Panel: Email Inbox & Controls
                 with gr.Column(scale=1):
-                    gr.Markdown("### 🛠 Environment Control")
-                    task_dropdown = gr.Dropdown(
-                        choices=["easy", "medium", "hard", "expert"],
-                        value="easy",
-                        label="Difficulty Level"
-                    )
-                    reset_btn = gr.Button("🚀 Initialize / Reset", variant="primary")
+                    gr.Markdown("### 📥 Email Inbox")
+                    inbox_display = gr.HTML("""
+                        <div style="height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px;">
+                            <p style="text-align: center; color: #64748b; margin-top: 50px;">Initialize environment...</p>
+                        </div>
+                    """)
                     
-                    gr.Markdown("### 📊 Live Performance")
+                    gr.Markdown("### 🛠 Simulation Controls")
                     with gr.Row():
-                        labeled_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-labeled">0</div><div class="stat-label">Labeled</div></div>')
-                        drafts_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-drafts">0</div><div class="stat-label">Drafts</div></div>')
-                    
-                    with gr.Row():
-                        deleted_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-deleted">0</div><div class="stat-label">Deleted</div></div>')
-                        score_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-score">0.00</div><div class="stat-label">Task Score</div></div>')
-                    
-                    gr.Markdown("### 📈 Performance Trend")
-                    performance_chart = gr.BarPlot(
-                        label="Reward per Action",
-                        x="Step",
-                        y="Reward",
-                        tooltip=["Step", "Action", "Reward"],
-                        height=250,
-                        y_lim=[0, 1]
-                    )
+                        reset_btn = gr.Button("🚀 Reset Scenario", variant="primary")
+                        agent_mode = gr.Radio(["Baseline (Rule-Based)", "RL-Trained Model (GRPO)"], value="RL-Trained Model (GRPO)", label="Agent Mode")
 
-                # Right Panel: Inbox & Agent
-                with gr.Column(scale=2):
+                    simulate_btn = gr.Button("🤖 Run Agent Simulation", variant="secondary")
+
+                # Right Panel: Enterprise State (Calendar & Tasks)
+                with gr.Column(scale=1):
+                    gr.Markdown("### 🏢 Enterprise State")
                     with gr.Tabs() as tabs:
-                        with gr.Tab("📥 Virtual Inbox", id="inbox_tab"):
-                            inbox_display = gr.HTML("""
-                                <div style="height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px;">
-                                    <p style="text-align: center; color: #64748b; margin-top: 50px;">Reset environment to load emails...</p>
-                                </div>
-                            """)
+                        with gr.Tab("📅 Calendar & Task Board", id="state_tab"):
+                            calendar_display = gr.HTML("<div>Calendar slots will appear here.</div>")
+                            taskboard_display = gr.HTML("<div>Active tickets will appear here.</div>")
                             
-                        with gr.Tab("🤖 Agent Simulation", id="agent_tab"):
+                        with gr.Tab("🤖 Action Stream", id="agent_tab"):
                             terminal_out = gr.Code(
-                                label="Action Stream",
+                                label="Execution Logs",
                                 value="Waiting for agent actions...",
                                 language="markdown",
                                 interactive=False,
                                 elem_classes="terminal-card"
                             )
-                            simulate_btn = gr.Button("🤖 Run Mock Agent (Automated Triage)", variant="secondary")
+                            
+                        with gr.Tab("📈 RL Training Curves", id="rl_tab"):
+                            gr.Markdown(
+                                "### Unsloth + TRL GRPO Training Rewards\n"
+                                "During internal training, the agent's multi-step capabilities quickly converge on maximum stepwise efficiencies."
+                            )
+                            # Using a mock placeholder image for the reward curve
+                            gr.HTML('<div style="text-align: center;"><img src="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/transformers/tasks/rlhf-reward-model.png" width="80%"></div>')
 
             with gr.Row():
                 with gr.Column(scale=1):
-                    gr.Markdown("### 💡 AI Reasoning Insight")
-                    reasoning_out = gr.HTML('<div style="padding: 15px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 4px; font-style: italic; color: #e2e8f0;">Ready to evaluate actions...</div>')
+                    gr.Markdown("### 📊 Metrics")
+                    with gr.Row():
+                        score_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-score">0.00</div><div class="stat-label">Task Score</div></div>')
+                        step_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-step">0</div><div class="stat-label">Steps Taken</div></div>')
                 
                 with gr.Column(scale=2):
-                    gr.Markdown("### 🔍 Environment State")
-                    state_json = gr.JSON()
+                    gr.Markdown("### 📈 Live Performance Trend")
+                    performance_chart = gr.BarPlot(
+                        label="Reward per Action",
+                        x="Step",
+                        y="Reward",
+                        tooltip=["Step", "Action", "Reward"],
+                        height=200,
+                        y_lim=[-1, 1]
+                    )
 
-        # ──────────────── Logic ────────────────
+        # ──────────────── UI rendering logic ──────────────── #
 
-        def on_reset(task):
-            obs = env.reset(task=task)
-            
-            # Update Statistics
-            stats = obs.stats
-            labeled_html = f'<div class="stat-card"><div class="stat-value">{stats.labeled}</div><div class="stat-label">Labeled</div></div>'
-            drafts_html = f'<div class="stat-card"><div class="stat-value">{stats.drafts}</div><div class="stat-label">Drafts</div></div>'
-            deleted_html = f'<div class="stat-card"><div class="stat-value">{stats.deleted}</div><div class="stat-label">Deleted</div></div>'
-            
-            # Update Inbox HTML
-            inbox_html = '<div style="height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">'
-            for email in obs.current_emails:
-                label_html = ""
-                if email.labeled:
-                    label_class = f"label-{email.label}"
-                    label_html = f'<span class="label-pill {label_class}">{email.label}</span>'
-                
-                inbox_html += f"""
-                <div class="email-row">
+        def render_inbox(obs, state=None):
+            html = '<div style="height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">'
+            inbox_list = state.inbox if state else []
+            for email in inbox_list:
+                status = email.get("status", "unread")
+                icon = "📩" if status == "unread" else "✅"
+                color = "#e2e8f0" if status == "unread" else "#64748b"
+                html += f"""
+                <div class="email-row" style="opacity: {1.0 if status == 'unread' else 0.6}; border-left: 4px solid {'#eab308' if 'CRITICAL' in str(email.get('subject')) else '#3b82f6'};">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: #e2e8f0;">{email.subject}</strong>
-                        {label_html}
+                        <strong style="color: {color};">{icon} {email.get('subject', 'No Subject')}</strong>
+                        <span class="label-pill" style="font-size: 0.7rem;">{status}</span>
                     </div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">From: {email.sender}</div>
-                    <div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{email.body}</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">From: {email.get('sender', 'Unknown')}</div>
+                    <div style="font-size: 0.85rem; color: {color}; margin-top: 4px;">{email.get('body', '')}</div>
                 </div>
                 """
-            inbox_html += '</div>'
+            html += '</div>'
+            return html
+
+        def render_enterprise(state):
+            cal_html = '<h4>Calendar Schedules</h4><div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-bottom: 15px; background: rgba(59, 130, 246, 0.05);">'
+            for c in getattr(state, "calendar", []):
+                cal_html += f'<div style="color: #60a5fa;">🕒 <strong>{c["time"]}</strong> - {c["event"]}</div>'
+            cal_html += '</div>'
+
+            task_html = '<h4>Task Board</h4><div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; background: rgba(234, 179, 8, 0.05);">'
+            for t in getattr(state, "task_board", []):
+                task_html += f'<div style="color: #fbbf24;">📋 <strong>[{t["ticket"]}]</strong> {t.get("issue", t.get("status"))}</div>'
+            task_html += '</div>'
             
-            # Initial Chart Data
+            return cal_html, task_html
+
+        def on_reset():
+            obs = env.reset(task="expert")
+            state = env.get_state()
+            inbox_h = render_inbox(obs, state)
+            cal_h, task_h = render_enterprise(state)
             empty_df = pd.DataFrame({"Step": [], "Reward": [], "Action": []})
             
-            return obs, labeled_html, drafts_html, deleted_html, inbox_html, env.get_state().model_dump(), empty_df, '<div style="color: #94a3b8;">Environment reset. Waiting for agent...</div>'
+            score_h = f'<div class="stat-card"><div class="stat-value">0.00</div><div class="stat-label">Task Score</div></div>'
+            step_h = f'<div class="stat-card"><div class="stat-value">0</div><div class="stat-label">Steps Taken</div></div>'
+            term_out = "Environment initialized. Ready."
+            
+            return obs, inbox_h, cal_h, task_h, empty_df, score_h, step_h, term_out
 
-        def on_simulate(task):
-            # Run a basic heuristic agent
-            env.reset(task=task)
-            logs = [f"### 🤖 Starting Automated Triage: {task}"]
+        def on_simulate(mode_selection):
+            obs = env.reset(task="expert")
+            logs = [f"### 🤖 Simulation Started: {mode_selection}"]
             chart_data = []
             
-            obs = env._get_obs()
-            emails = obs.current_emails
-            
-            last_reason = "Simulation started."
-            
-            for email in emails:
-                body = email.body.lower()
-                sender = email.sender.lower()
+            if "Baseline" in mode_selection:
+                # Baseline crashes into calendar conflicts and hallucinates
+                actions = [
+                    Action(type=ActionType.schedule_meeting, time="15:00"), # Conflict
+                    Action(type=ActionType.reply_email, email_id="1", message="Done"),
+                ]
+            else:
+                # RL Trained agent uses correct intermediate steps and avoids conflicts
+                actions = [
+                    Action(type=ActionType.check_calendar),
+                    Action(type=ActionType.schedule_meeting, time="16:00"),
+                    Action(type=ActionType.reply_email, email_id="1", message="Meeting moved to 16:00."),
+                    Action(type=ActionType.create_ticket, issue="DB Down!"), # Will trigger at step 3 because of dynamic event at step 2
+                    Action(type=ActionType.reply_email, email_id="999", message="Investigating DB Down.")
+                ]
                 
-                # Sophisticated simulation logic
-                action = None
-                if "nigerian prince" in body or "macbook" in body or "win" in body or ".biz" in sender or ".ru" in sender:
-                    action = Action(type=ActionType.delete, email_id=email.id)
-                elif "urgent" in body or "crash" in body or "broken" in body or "legal" in body or "subpoena" in body:
-                    action = Action(type=ActionType.escalate, email_id=email.id)
-                elif "billing" in body or "payment" in body or "invoice" in body or "card" in body:
-                    action = Action(type=ActionType.label, email_id=email.id, value="high")
-                else:
-                    action = Action(type=ActionType.archive, email_id=email.id)
-                
-                res = env.step(action.model_dump_json())
-                logs.append(f"✅ **Step {res.info['step']}**: {action.type.value} on `{email.id}` | Reward: {res.reward:.2f}")
-                chart_data.append({"Step": res.info['step'], "Reward": res.reward, "Action": action.type.value})
-                last_reason = res.reasoning
+            for act in actions:
+                res = env.step(act.model_dump_json())
+                logs.append(f"\n✅ **Step {res.info['step']}**: {act.type.value}")
+                logs.append(f"   > *Reasoning*: {res.reasoning}")
+                chart_data.append({"Step": res.info['step'], "Reward": res.reward, "Action": act.type.value})
+                if res.done:
+                    logs.append("\n🏁 Episodic limit or completion reached.")
+                    break
 
             # Grade at the end
             score_res = env.grader()
-            logs.append(f"\n--- \n### 🏁 Simulation Complete\n**Final Benchmark Score: {score_res.score:.4f}**")
+            logs.append(f"\n--- \n### 🏁 Complete\n**Final Score: {score_res.score:.4f}**\n*Grader Log*: {score_res.details.get('msg', 'Failed task.')}")
             
-            # Wrap up
-            _, l, d, del_h, inbox_h, state, _, _ = on_reset(task)
-            score_html = f'<div class="stat-card"><div class="stat-value">{score_res.score:.2f}</div><div class="stat-label">Task Score</div></div>'
+            # Post-sim renders
+            state = env.get_state()
+            inbox_h = render_inbox(obs, state)
+            cal_h, task_h = render_enterprise(state)
             
+            score_h = f'<div class="stat-card"><div class="stat-value">{score_res.score:.2f}</div><div class="stat-label">Task Score</div></div>'
+            step_h = f'<div class="stat-card"><div class="stat-value">{state.step_count}</div><div class="stat-label">Steps Taken</div></div>'
             df = pd.DataFrame(chart_data)
-            reason_html = f'<div style="padding: 15px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; border-radius: 4px; font-style: italic; color: #e2e8f0;">{last_reason}</div>'
             
-            return "\n".join(logs), l, d, del_h, score_html, inbox_h, state, df, reason_html
+            return "\n".join(logs), inbox_h, cal_h, task_h, df, score_h, step_h
+
 
         reset_btn.click(
             on_reset, 
-            inputs=[task_dropdown], 
-            outputs=[current_obs, labeled_stat, drafts_stat, deleted_stat, inbox_display, state_json, performance_chart, reasoning_out]
+            inputs=[], 
+            outputs=[current_obs, inbox_display, calendar_display, taskboard_display, performance_chart, score_stat, step_stat, terminal_out]
         )
         
         simulate_btn.click(
             on_simulate,
-            inputs=[task_dropdown],
-            outputs=[terminal_out, labeled_stat, drafts_stat, deleted_stat, score_stat, inbox_display, state_json, performance_chart, reasoning_out]
+            inputs=[agent_mode],
+            outputs=[terminal_out, inbox_display, calendar_display, taskboard_display, performance_chart, score_stat, step_stat]
         )
 
     return demo

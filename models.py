@@ -2,7 +2,7 @@
 models.py — Pydantic schemas for EmailTriage OpenEnv
 """
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Literal, Union
+from typing import List, Dict, Optional, Literal, Union, Any
 from enum import Enum
 
 
@@ -17,11 +17,10 @@ class Label(str, Enum):
 
 
 class ActionType(str, Enum):
-    label   = "label"
-    draft   = "draft"
-    delete  = "delete"
-    escalate = "escalate"
-    archive = "archive"
+    check_calendar = "CHECK_CALENDAR"
+    schedule_meeting = "SCHEDULE_MEETING"
+    reply_email = "REPLY_EMAIL"
+    create_ticket = "CREATE_TICKET"
 
 
 # ─────────────────────────── Core Data ────────────────────────
@@ -50,16 +49,17 @@ class EmailView(BaseModel):
 
 class Action(BaseModel):
     """
-    Agent action. One of:
-      - label(email_id, value: spam|low|med|high|escalate)
-      - draft(email_id, value: <reply text>)
-      - delete(email_id)
-      - escalate(email_id)
-      - archive(email_id)
+    Tool-Calling Actions:
+      - CHECK_CALENDAR()
+      - SCHEDULE_MEETING(time)
+      - REPLY_EMAIL(id, message)
+      - CREATE_TICKET(issue)
     """
     type: ActionType
-    email_id: str
-    value: Optional[str] = Field(default=None, description="Label value or draft reply text")
+    email_id: Optional[str] = Field(default=None)
+    time: Optional[str] = Field(default=None)
+    message: Optional[str] = Field(default=None)
+    issue: Optional[str] = Field(default=None)
 
     model_config = {"use_enum_values": True}
 
@@ -94,14 +94,12 @@ class Observation(BaseModel):
 # ─────────────────────────── State ────────────────────────────
 
 class State(BaseModel):
-    """Full internal environment state (not exposed to agent directly)."""
-    inbox: Dict[str, Email] = {}
-    labels: Dict[str, str] = {}          # email_id -> label string
-    replies: Dict[str, str] = {}         # email_id -> draft text
-    deleted: List[str] = []
-    archived: List[str] = []
-    task: str = "easy"
+    """Full internal environment state for Enterprise."""
+    inbox: List[Dict[str, Any]] = []
+    calendar: List[Dict[str, Any]] = []
+    task_board: List[Dict[str, Any]] = []
     step_count: int = 0
+    task: str = "easy"
 
 
 # ─────────────────────────── Step Result ──────────────────────
