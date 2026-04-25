@@ -1,97 +1,118 @@
 """
-train.py — Training pipeline using Hugging Face TRL GRPOTrainer and Unsloth.
-This script demonstrates how to train the OpenEnv via GRPO without a heavy critic model.
-
-For Google Colab or local GPU setup:
-pip install unsloth trl peft transformers accelerate openenv
+train.py — Max-Level RL Training using Unsloth GRPO + OpenEnv
+Optimized for local GPU (RTX 3090+) or Colab.
 """
-import os
 import torch
-from unsloth import FastLanguageModel, PatchDPOTrainer
-try:
-    from unsloth import is_bfloat16_supported
-except ImportError:
-    def is_bfloat16_supported(): return False
-
+import json
+from unsloth import FastLanguageModel, PatchFastRL
 from trl import GRPOTrainer, GRPOConfig
+from datasets import Dataset
 from environment import EmailTriageEnv
 
-# 1. Configuration for Fast Iteration
-MODEL_NAME = "unsloth/Qwen2.5-3B-Instruct"
-MAX_SEQ_LENGTH = 1024
-LORA_RANK = 16
+# 1. Initialize Patch
+try:
+    PatchFastRL("grpo", FastLanguageModel)
+except Exception:
+    pass # Fallback if already patched or version mismatch
 
-def format_env_prompt(obs_dict):
-    """Simple converter mapping OpenEnv obs to a list of dicts for generation."""
-    return [
-        {"role": "system", "content": "You are an Enterprise AI Agent. Output ONLY tool commands in JSON."},
-        {"role": "user", "content": f"Current State: {obs_dict}. Process tools."}
-    ]
+# 2. Load Model (4-bit specialized for local/Colab)
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="unsloth/Qwen2.5-3B-Instruct",
+    max_seq_length=4096,
+    dtype=torch.float16,
+    load_in_4bit=True
+)
 
-def main():
-    print("🚀 Initializing Unsloth FastLanguageModel...")
-    # Load Model with Unsloth optimizations
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=MODEL_NAME,
-        max_seq_length=MAX_SEQ_LENGTH,
-        dtype=torch.bfloat16 if is_bfloat16_supported() else torch.float16,
-        load_in_4bit=True,  # 4bit quantization to save memory
-        device_map="auto"
-    )
+model = FastLanguageModel.get_peft_model(
+    model,
+    r=64,
+    target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    lora_alpha=64,
+    use_gradient_checkpointing="unsloth",
+    random_state=3407,
+)
 
-    # Configure LoRA Adapters
-    print("⚡ Applying LoRA...")
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=LORA_RANK,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
-        lora_alpha=LORA_RANK,
-        use_gradient_checkpointing="unsloth",
-        random_state=3407,
-    )
+# 3. Generate Episodes for Training
+def generate_synthetic_episodes(n=256):
+    """Generates synthetic trajectories for initial alignment."""
+    env = EmailTriageEnv()
+    data = []
+    for _ in range(n):
+        obs = env.reset("enterprise_workflow")
+        trajectory = []
+        while not obs.done:
+            # Mocking a logical step sequence
+            # In a real run, this could be from a baseline LLM
+            prompt = f"System State: {obs.model_dump_json()}\nAction:"
+            # Choosing a placeholder action
+            action = {"tool": "check_calendar", "params": {}}
+            res = env.step(json.dumps(action))
+            obs = res.observation
+            trajectory.append({
+                "prompt": prompt,
+                "action": json.dumps(action),
+                "reward": res.reward
+            })
+        data.append({
+            "prompt": [t["prompt"] for t in trajectory],
+            "completion": [t["action"] for t in trajectory]
+        })
+    return Dataset.from_list(data)
 
-    PatchDPOTrainer() # Unsloth performance patch
-
-    print("🌍 Binding OpenEnv for TRL...")
-    def custom_environment_factory():
-        # Inject the OpenEnv email-triage environment correctly
-        env = EmailTriageEnv()
-        return env
-
-    # Configure GRPO (Generalized Reward Policy Optimization)
-    training_args = GRPOConfig(
-        output_dir="./grpo_checkpoints",
-        learning_rate=2e-5,
-        lr_scheduler_type="cosine",
-        max_steps=200,          # Quick hackathon demo run
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=4,
-        optim="adamw_8bit",
-        logging_steps=10,
-        beta=0.1,               # KL divergence penalty
-        report_to="none"        # Disable wandb to prevent Colab hangs
-    )
-
-    print("🤖 Starting GRPOTrainer...")
-    # Note: TRL 0.10+ GRPOTrainer allows passing an environment factory directly
-    # and programmatically computing rewards without an external critic model.
-    trainer = GRPOTrainer(
-        model=model,
-        processing_class=tokenizer,
-        args=training_args,
-        env_factory=custom_environment_factory,  # Passes env object directly
-        train_dataset=None, # Uses env for internal rollout generation
-    )
-
-    # Kick off training
-    trainer.train()
-
-    print("✅ Training Complete. Saving LoRA adapter...")
-    model.save_pretrained("email-triage-grpo-qwen2.5")
-    tokenizer.save_pretrained("email-triage-grpo-qwen2.5")
+# 4. Enterprise Reward Function (Hooks Env Grader)
+def enterprise_reward_func(completions, **kwargs):
+    """Programmatic reward function using the environment logic directly."""
+    env = EmailTriageEnv()
+    rewards = []
     
-    print("🎉 Done! Ready to push to Hugging Face or run inference.")
+    # completions are strings generated by the model
+    for content in completions:
+        try:
+            # Clean possible markdown
+            if "```" in content:
+                content = content.split("```")[1].replace("json", "").strip()
+            
+            # Reset/Setup env for a single validation step or episode
+            env.reset("enterprise_workflow")
+            res = env.step(content)
+            
+            # Use the environment's internal grader for the final quality score
+            grade_res = env.grader()
+            rewards.append(grade_res.score)
+        except Exception:
+            rewards.append(0.01) # Minimum penalty for invalid output/crash
+            
+    return rewards
+
+# 5. Training Config
+training_args = GRPOConfig(
+    output_dir="./rl-agent-enterprise-v1",
+    num_generations=8,
+    beta=0.04,
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=8,
+    learning_rate=5e-6,
+    num_train_epochs=1,
+    max_steps=100,
+    logging_steps=10,
+    save_steps=50,
+    report_to="tensorboard" # Enabled for reward curve visualization
+)
+
+# 6. Trainer Initialization
+trainer = GRPOTrainer(
+    model=model,
+    processing_class=tokenizer,
+    args=training_args,
+    reward_funcs=[enterprise_reward_func],
+    train_dataset=generate_synthetic_episodes(10) # Using a small sample for demo
+)
 
 if __name__ == "__main__":
-    main()
+    print("🚀 Starting Advanced GRPO Training...")
+    trainer.train()
+    
+    print("✅ Training Complete. Saving model...")
+    model.save_pretrained("fine-tuned-enterprise-agent")
+    tokenizer.save_pretrained("fine-tuned-enterprise-agent")
+    print("🎉 Exported: fine-tuned-enterprise-agent")

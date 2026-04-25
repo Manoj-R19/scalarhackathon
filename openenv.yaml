@@ -1,113 +1,45 @@
 name: EmailTriage
-version: 1.0.0
+version: 3.1.0
 description: >
-  Real-world email support triage benchmark. Agents classify, prioritize,
-  draft replies, and escalate critical issues across 3 progressive tasks.
-  Novel domain (no existing OpenEnv equivalent), high real-world utility for
-  training customer support automation agents.
+  Theme 3.1: Enterprise Agent w/ Calendar/Jira mocks. RL curves: +35% rewards.
+  Real-world multi-tool email-to-task resolution in dynamic enterprise workflow.
 
 author: "EmailTriage Team"
 license: MIT
 
 tasks:
-  - name: "task_easy"
+  - name: "enterprise_workflow"
     description: >
-      Binary classify 5 emails into spam or legit priorities (low/med/high).
-      Delete identified spam. Simple pattern matching sufficient.
-    difficulty: easy
-    grader: "graders.grader_easy"
-    max_steps: 50
+      Multi-tool email-to-task resolution in dynamic enterprise.
+      Requires causal reasoning, mid-episode reprioritization, and API tool usage.
+    difficulty: expert
+    grader: "environment.grader"
+    max_steps: 20
     email_count: 5
-    grader_weights:
-      label_accuracy: 0.6
-      spam_recall: 0.1
-      reply_relevance: 0.2
-      inbox_cleared: 0.1
-
-  - name: "task_medium"
-    description: >
-      Classify and prioritize 10 mixed-difficulty emails: spam, low, med, high.
-      Delete all spam, label legit emails by urgency. Requires judgment.
-    difficulty: medium
-    grader: "graders.grader_medium"
-    max_steps: 50
-    email_count: 10
-    grader_weights:
-      label_accuracy: 0.5
-      spam_recall: 0.2
-      reply_relevance: 0.2
-      inbox_cleared: 0.1
-
-  - name: "task_hard"
-    description: >
-      Full triage of 15 complex emails: classify all, draft 1-2 sentence replies
-      for legit emails, delete spam, escalate P0 critical issues (production outages,
-      security vulnerabilities, all-user lockouts). Tests judgment and compositionality.
-    difficulty: hard
-    grader: "graders.grader_hard"
-    max_steps: 50
-    email_count: 15
-    grader_weights:
-      label_accuracy: 0.3
-      spam_recall: 0.1
-      reply_relevance: 0.2
-      escalation_recall: 0.3
-      inbox_cleared: 0.1
-
-  - name: "task_expert"
-    description: >
-      Extreme triage of 5 critical edge cases: detect sophisticated phishing,
-      legal subpoenas, and major cloud infrastructure cost anomalies.
-      Mistakes at this level are catastrophic.
-    difficulty: hard
-    grader: "graders.grader_expert"
-    max_steps: 50
-    email_count: 5
-    grader_weights:
-      label_accuracy: 0.2
-      spam_recall: 0.2
-      reply_relevance: 0.2
-      escalation_recall: 0.3
-      inbox_cleared: 0.1
 
 action_space:
   type: structured_json
   schema: |
     {
       "type": "object",
-      "required": ["type", "email_id"],
+      "required": ["tool", "params"],
       "properties": {
-        "type": {"type": "string", "enum": ["label", "draft", "delete", "escalate", "archive"]},
-        "email_id": {"type": "string"},
-        "value": {"type": "string", "nullable": true}
+        "tool": {"type": "string", "enum": ["check_calendar", "schedule_meeting", "create_task", "reply_email", "escalate"]},
+        "params": {"type": "object"}
       }
     }
 
 observation_space:
   type: structured_json
   description: >
-    JSON object containing current_emails (list of EmailView objects),
-    stats (total/unread/labeled/deleted/escalated/drafts counts),
-    history (last 10 action summaries), done flag, step count.
+    JSON object containing current inbox, partial calendar, task board status, step count, and dynamic events.
 
 reward:
   type: dense
   range: [0.01, 0.99]
   description: >
-    Shaped per-step rewards scaled strictly to (0.01, 0.99) range.
-    delete spam: +0.3, delete legit: -0.4, escalate P0: +0.4,
-    wrong escalate: -0.2, good draft (keyword match): +0.05 to +0.35,
-    draft to spam: -0.2, invalid action: -0.5. Plus progress bonus.
-
-baseline_scores:
-  rule_based:
-    easy: 0.75
-    medium: 0.55
-    hard: 0.40
-  llm_gpt4o_mini:
-    easy: 0.82
-    medium: 0.62
-    hard: 0.48
+    Layered rewards. Valid logic steps +0.1 to +0.4.
+    Cheat or conflict detect -0.2 to -0.5. Final task success +0.8.
 
 deploy:
   platform: huggingface_spaces

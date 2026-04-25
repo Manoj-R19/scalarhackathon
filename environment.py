@@ -1,256 +1,171 @@
 """
-environment.py — Core EmailTriage OpenEnv logic
-Updated for Theme #3.1: Multi-step Enterprise Agent Simulator
+environment.py — Enterprise Max Edition
+Optimized for high-throughput training and expert-level dynamics.
 """
 from __future__ import annotations
-
 import json
 import random
-import time
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
+from models import Action, Observation, State, Stats, ActionSummary, StepResult, GraderResult
 
-from models import (
-    Action, ActionType, Observation, State, Stats, ActionSummary, StepResult, GraderResult
-)
-
-MAX_STEPS = 5
+MAX_STEPS = 20
 RANDOM_SEED = 42
 
 class EmailTriageEnv:
     def __init__(self):
         self.state = State()
-        self.action_history: list[ActionSummary] = []
+        self.action_history: List[ActionSummary] = []
         self.current_task: str = "expert"
+        self._expert_mode = False
 
-    def reset(self, task: str = "expert") -> Observation:
+    def reset(self, difficulty="expert") -> Observation:
         random.seed(RANDOM_SEED)
-        self.current_task = task
+        self.current_task = difficulty
+        self._expert_mode = (difficulty == "expert")
+        
+        # Hardest States: Locked All-Hands + High Conflict Slot
+        initial_calendar = [
+            {"time": 14.0, "event": "CEO All-Hands", "locked": True},
+            {"time": 15.0, "event": "Marketing Sync"}
+        ]
         
         self.state = State(
-            inbox=[
-                {
-                    "id": "1", 
+            inbox={
+                "e1": {
+                    "id": "e1", 
                     "sender": "boss@company.com", 
-                    "subject": "Urgent Sync",
-                    "body": "Need to meet at 15:00 today. Clear your calendar if needed.", 
+                    "subject": "Urgent Outage Sync",
+                    "body": "Need to meet at 15:00 today to discuss outage. CEO is watching.", 
                     "status": "unread"
                 }
-            ],
-            calendar=[{"time": "15:00", "event": "Marketing Sync"}],
-            task_board=[{"ticket": "T-101", "status": "open"}],
+            },
+            calendar=initial_calendar,
+            tasks=[{"id": "T101", "status": "open", "priority": "high"}],
+            user_prefs={"max_meetings_day": 3},
+            current_time=0,
             step_count=0,
-            task=task
+            task=difficulty
         )
         self.action_history = []
         return self._get_obs()
 
     def _safe_normalize(self, score: float, epsilon: float = 0.01) -> float:
-        try:
-            v = float(score)
-            if v != v: v = 0.5
-        except Exception:
-            v = 0.5
-        clamped = max(epsilon, min(1.0 - epsilon, v))
-        return round(clamped, 4)
+        v = float(score) if not (score != score) else 0.5
+        return round(max(epsilon, min(1.0 - epsilon, v)), 4)
+
+    def _conflict_detect(self, t: float) -> bool:
+        # Vectorized-style logic: check proximity < 1 hour
+        return any(abs(e["time"] - t) < 1.0 for e in self.state.calendar)
 
     def step(self, action_json: str) -> StepResult:
         self.state.step_count += 1
         reward = 0.0
-        reason = ""
+        reason = "Neutral"
         info = {}
 
-        # 5. Introduce Dynamic Events
-        if self.state.step_count == 2:
-            self.state.inbox.append({
-                "id": "999",
-                "sender": "sysadmin@corp.com",
-                "subject": "CRITICAL",
-                "body": "Prod DB is down. Create a ticket immediately.",
+        # DYNAMIC P0 INJECT (Hardest test of context-switching)
+        if self._expert_mode and self.state.step_count % 3 == 0:
+            p0_id = f"P0_{self.state.step_count}"
+            self.state.inbox[p0_id] = {
+                "id": p0_id,
+                "sender": "noc@corp.com",
+                "subject": "PROD DB DOWN",
+                "body": "Emergency: Main database is unresponsive. ESCALATE IMMEDIATELY.",
                 "status": "unread"
-            })
-            info["dynamic_event"] = "Injected an urgent email mid-workflow."
+            }
+            info["dynamic_event"] = "CRISIS: Injection triggered."
 
         try:
+            # Quick parse
             action = Action.model_validate_json(action_json)
         except Exception as e:
-            reward = -0.2
-            reason = f"Failed to parse action JSON: {e}"
-            info["error"] = "Invalid action JSON."
-            return self._finalize_step(reward, reason, info, action_type="INVALID")
+            return self._finalize_step(-0.5, "INVALID JSON", info, "INVALID")
 
-        at = action.type
-        info["action_applied"] = at
+        tool = action.tool
+        params = action.params
+        info["action_applied"] = tool
 
-        # 2. Transition to Tool-Calling Actions
-        if at == ActionType.check_calendar:
-            reward = 0.1
-            reason = "Checked calendar successfully. See observation for availability."
+        if tool == "check_calendar":
+            reward += 0.15 # Higher reward for planning
+            reason = "Checking calendar view."
             
-        elif at == ActionType.schedule_meeting:
-            time_val = action.time
-            if not time_val:
-                reward = -0.2
-                reason = "Error: time argument missing."
+        elif tool == "schedule_meeting":
+            t_val = float(params.get("time", 0))
+            if self._conflict_detect(t_val):
+                reward -= 0.4
+                reason = "ERROR: Conflict at 15:00 locked."
+                info["error"] = "Conflict detected"
             else:
-                conflict = any(ev["time"] == time_val for ev in self.state.calendar)
-                if conflict:
-                    reward = -0.2
-                    reason = "Error: Time unavailable due to conflict."
-                    info["error"] = "Conflict detected."
-                else:
-                    self.state.calendar.append({"time": time_val, "event": "Scheduled Meeting"})
-                    reward = 0.1
-                    reason = f"Successfully scheduled meeting at {time_val}."
-                    
-        elif at == ActionType.reply_email:
-            eid = action.email_id
-            msg = action.message
-            if not eid or not msg:
-                reward = -0.2
-                reason = "Error: missing id or message."
-            else:
-                # Find email and mark resolved
-                found = False
-                for email in self.state.inbox:
-                    if email["id"] == eid:
-                        email["status"] = "resolved"
-                        found = True
-                if not found:
-                    reward = -0.2
-                    reason = f"Error: Email {eid} not found."
-                else:
-                    reward = 0.1
-                    reason = f"Replied to email {eid}."
-                    
-        elif at == ActionType.create_ticket:
-            issue = action.issue
-            if not issue:
-                reward = -0.2
-                reason = "Error: missing issue description."
-            else:
-                self.state.task_board.append({"ticket": f"T-10{len(self.state.task_board)+1}", "status": "open", "issue": issue})
-                reward = 0.1
-                reason = f"Ticket created for: {issue}."
-                
-        else:
-            reward = -0.2
-            reason = "Hallucinated or unknown tool call."
+                self.state.calendar.append({"time": t_val, "event": "Scheduled"})
+                reward += 0.5
+                reason = f"Booked successfully at {t_val}."
 
-        return self._finalize_step(reward, reason, info, action_type=at)
+        elif tool == "escalate":
+            eid = params.get("email_id")
+            if eid in self.state.inbox and "DB DOWN" in self.state.inbox[eid].get("body", ""):
+                reward += 0.6 # High reward for correct crisis handling
+                reason = "CORRECT: P0 Crisis Escalated."
+                self.state.inbox[eid]["status"] = "escalated"
+            else:
+                reward += 0.1
+                reason = "Escalated standard item."
+                if eid in self.state.inbox: self.state.inbox[eid]["status"] = "escalated"
+
+        elif tool == "reply_email":
+            eid = params.get("email_id")
+            if eid in self.state.inbox:
+                self.state.inbox[eid]["status"] = "resolved"
+                reward += 0.1
+            reason = f"Replied to {eid}."
+            
+        else:
+            reward -= 0.2
+            reason = f"Tool {tool} execution."
+
+        # Context switch debt: penalize if unhandled P0 exists
+        unhandled_p0 = any("DB DOWN" in e["body"] and e["status"] == "unread" for e in self.state.inbox.values())
+        if unhandled_p0 and tool != "escalate":
+            reward -= 0.3 # Heavy penalty for ignoring crisis
+            reason += " | ALERT: Ignoring crisis!"
+
+        return self._finalize_step(reward, reason, info, action_type=tool)
 
     def _finalize_step(self, step_reward: float, reason: str, info: dict, action_type: str) -> StepResult:
-        # Check task completion
-        done, final_reason = self._is_task_complete()
-        if self.state.step_count >= MAX_STEPS:
-            done = True
-            
-        # Final Reward logic
-        if done and final_reason:
-            step_reward = max(step_reward, 0) + 0.8  # Enormous reward at completion
-            reason = f"{reason} | {final_reason}"
-        elif done and not final_reason:
-            reason = f"{reason} | Episode ended, but task was incomplete."
+        all_resolved = all(e["status"] in ("resolved", "escalated") for e in self.state.inbox.values())
+        done = all_resolved or self.state.step_count >= MAX_STEPS
+        
+        # Fast Time-Based Shaper
+        step_reward += 0.1 * (1 - self.state.step_count / MAX_STEPS)
+        
+        if done and all_resolved:
+            step_reward += 0.8
+        elif done:
+            step_reward -= 0.5
 
-        clamped_reward = self._safe_normalize(step_reward)
-
-        self.action_history.append(ActionSummary(
-            step=self.state.step_count,
-            action_type=action_type,
-            email_id="",
-            reward=clamped_reward,
-        ))
+        reward = self._safe_normalize(step_reward)
+        self.action_history.append(ActionSummary(step=self.state.step_count, action_type=action_type, email_id="", reward=reward))
 
         obs = self._get_obs(done=done)
-        info["step"] = self.state.step_count
-        info["task"] = self.current_task
-
-        return StepResult(
-            observation=obs,
-            reward=clamped_reward,
-            done=done,
-            info=info,
-            reasoning=reason
-        )
-
-    def _is_task_complete(self) -> Tuple[bool, str]:
-        # Boss email must be resolved, and urgent "Prod DB" ticket must be created (if injected)
-        boss_resolved = any(e["id"] == "1" and e["status"] == "resolved" for e in self.state.inbox)
-        critical_injected = any(e["id"] == "999" for e in self.state.inbox)
-        critical_resolved = any(e["id"] == "999" and e["status"] == "resolved" for e in self.state.inbox)
-        ticket_created = any("Prod DB" in str(t.get("issue","")) for t in self.state.task_board)
-
-        # Has to have moved the conflicting meeting, or scheduled a new one at available time.
-        # This is a bit flexible. Basically if they replied and created a ticket, they win.
-        if boss_resolved:
-            if critical_injected and not (critical_resolved or ticket_created):
-                return False, ""
-            return True, "Task Completed Successfully! (resolved boss email + urgent events)"
-        return False, ""
+        info["step"], info["task"], info["reasoning"] = self.state.step_count, self.current_task, reason
+        return StepResult(observation=obs, reward=reward, done=done, info=info, reasoning=reason)
 
     def _get_obs(self, done: bool = False) -> Observation:
-        unread_count = sum(1 for e in self.state.inbox if e.get("status") == "unread")
-        
-        stats = Stats(
-            total=len(self.state.inbox),
-            unread=unread_count,
-            labeled=0,
-            deleted=0,
-            escalated=0,
-            drafts=0,
-        )
-
-        obs_emails = []
-        for e in self.state.inbox:
-            # We mock the EmailView for the observation
-            from models import EmailView
-            obs_emails.append(EmailView(
-                id=e["id"],
-                subject=e.get("subject", ""),
-                body=e.get("body", ""),
-                sender=e.get("sender", ""),
-                labeled=(e.get("status") != "unread"),
-                label=e.get("status")
-            ))
-
-        obs = Observation(
-            current_emails=obs_emails,
-            stats=stats,
-            history=self.action_history[-10:],
-            done=done,
-            step=self.state.step_count,
-        )
-        
-        # We also need to expose the calendar and task board to the agent observation 
-        # (Since OpenEnv Observation is strict, we might inject it via current_emails or assume the agent can query it directly).
-        # We will let check_calendar action handle calendar visibility by returning it in the step result reasoning, or extend Observation dynamically if needed.
-        
-        return obs
+        unread = sum(1 for e in self.state.inbox.values() if e.get("status") == "unread")
+        stats = Stats(total=len(self.state.inbox), unread=unread, labeled=0, deleted=0, escalated=0, drafts=0)
+        from models import EmailView
+        obs_emails = [EmailView(id=e["id"], subject=e["subject"], body=e["body"], sender=e["sender"], labeled=(e["status"] != "unread"), label=e["status"]) for e in self.state.inbox.values()]
+        return Observation(current_emails=obs_emails, stats=stats, history=self.action_history[-10:], done=done, step=self.state.step_count)
 
     def grader(self) -> GraderResult:
-        done, msg = self._is_task_complete()
-        score = 0.95 if done else 0.15
+        p0_handled = any("DB DOWN" in e["body"] and e["status"] == "escalated" for e in self.state.inbox.values())
+        boss_handled = self.state.inbox.get("e1", {}).get("status") == "resolved"
         
-        breakdown = {
-            "calendar_management": score,
-            "urgent_interruption_handled": score if any("ticket" in t.get("issue","").lower() or "db down" in t.get("issue","").lower() for t in self.state.task_board) else 0.05,
-            "boss_email_resolved": 0.95 if any(e["id"] == "1" and e["status"] == "resolved" for e in self.state.inbox) else 0.05,
-            "inbox_cleared": score,
-            "efficiency": 0.5
-        }
-
-        # Clamp all
+        score = 0.15
+        if p0_handled and boss_handled: score = 0.95
+        elif p0_handled or boss_handled: score = 0.55
+        
         score = self._safe_normalize(score)
-        for k, v in breakdown.items():
-            breakdown[k] = self._safe_normalize(v)
+        return GraderResult(score=score, breakdown={"p0_resilience": score, "workflow_efficiency": score}, details={"msg": "Expert Check"})
 
-        return GraderResult(
-            score=score,
-            breakdown=breakdown,
-            details={"msg": msg}
-        )
-
-    def get_state(self) -> State:
-        return self.state
-
-    def get_tasks(self) -> list[dict]:
-        return [{"id": "expert", "description": "Enterprise Agent Simulator", "difficulty": "expert"}]
+    def get_state(self) -> State: return self.state
+    def get_tasks(self) -> list[dict]: return [{"id": "expert", "description": "Expert P0 Crisis Management", "difficulty": "expert"}]

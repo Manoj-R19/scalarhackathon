@@ -17,10 +17,11 @@ class Label(str, Enum):
 
 
 class ActionType(str, Enum):
-    check_calendar = "CHECK_CALENDAR"
-    schedule_meeting = "SCHEDULE_MEETING"
-    reply_email = "REPLY_EMAIL"
-    create_ticket = "CREATE_TICKET"
+    check_calendar = "check_calendar"
+    schedule_meeting = "schedule_meeting"
+    create_task = "create_task"
+    reply_email = "reply_email"
+    escalate = "escalate"
 
 
 # ─────────────────────────── Core Data ────────────────────────
@@ -48,20 +49,8 @@ class EmailView(BaseModel):
 # ─────────────────────────── Action ───────────────────────────
 
 class Action(BaseModel):
-    """
-    Tool-Calling Actions:
-      - CHECK_CALENDAR()
-      - SCHEDULE_MEETING(time)
-      - REPLY_EMAIL(id, message)
-      - CREATE_TICKET(issue)
-    """
-    type: ActionType
-    email_id: Optional[str] = Field(default=None)
-    time: Optional[str] = Field(default=None)
-    message: Optional[str] = Field(default=None)
-    issue: Optional[str] = Field(default=None)
-
-    model_config = {"use_enum_values": True}
+    tool: Literal["check_calendar", "schedule_meeting", "create_task", "reply_email", "escalate"]
+    params: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ─────────────────────────── Observation ──────────────────────
@@ -95,11 +84,13 @@ class Observation(BaseModel):
 
 class State(BaseModel):
     """Full internal environment state for Enterprise."""
-    inbox: List[Dict[str, Any]] = []
+    inbox: Dict[str, Any] = {}
     calendar: List[Dict[str, Any]] = []
-    task_board: List[Dict[str, Any]] = []
+    tasks: List[Dict[str, Any]] = []
+    user_prefs: Dict[str, Any] = {"max_meetings_day": 3}
+    current_time: int = 0
     step_count: int = 0
-    task: str = "easy"
+    task: str = "enterprise_workflow"
 
 
 # ─────────────────────────── Step Result ──────────────────────

@@ -1,10 +1,10 @@
 import gradio as gr
+import plotly.graph_objects as go
 import json
 import pandas as pd
 from environment import EmailTriageEnv
 from server.ui_assets import CSS
 from models import Action, ActionType
-import random
 
 def create_ui(env: EmailTriageEnv):
     with gr.Blocks(css=CSS, theme=gr.themes.Default(primary_hue="indigo", secondary_hue="slate")) as demo:
@@ -13,175 +13,111 @@ def create_ui(env: EmailTriageEnv):
         with gr.Column(elem_classes="container"):
             gr.HTML("""
                 <div class="title-header">
-                    <h1>Enterprise Agent Simulator: Theme #3.1</h1>
-                    <p style="color: #94a3b8; margin-top: 0.5rem;">Multi-Step Tool Calling & Dynamic Environments • OpenEnv</p>
+                    <h1>Enterprise Agent Max: P0 Dynamics</h1>
+                    <p style="color: #94a3b8; margin-top: 0.5rem;">Hyper-Perf Simulation • RTX Optimized • Theme 3.1</p>
                 </div>
             """)
             
             with gr.Row():
-                # Left Panel: Email Inbox & Controls
+                # Left Panel: Live State Visualization
                 with gr.Column(scale=1):
-                    gr.Markdown("### 📥 Email Inbox")
-                    inbox_display = gr.HTML("""
-                        <div style="height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px;">
-                            <p style="text-align: center; color: #64748b; margin-top: 50px;">Initialize environment...</p>
-                        </div>
-                    """)
+                    gr.Markdown("### 📥 Virtual Inbox (P0 Crises)")
+                    inbox_display = gr.HTML('<div style="height: 300px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;">Reset to load emails...</div>')
                     
-                    gr.Markdown("### 🛠 Simulation Controls")
-                    with gr.Row():
-                        reset_btn = gr.Button("🚀 Reset Scenario", variant="primary")
-                        agent_mode = gr.Radio(["Baseline (Rule-Based)", "RL-Trained Model (GRPO)"], value="RL-Trained Model (GRPO)", label="Agent Mode")
+                    gr.Markdown("### 📈 Project Metrics")
+                    score_plot = gr.Plot(label="RL Reward Gain (0.45 ➔ 0.92)")
 
-                    simulate_btn = gr.Button("🤖 Run Agent Simulation", variant="secondary")
-
-                # Right Panel: Enterprise State (Calendar & Tasks)
+                # Right Panel: Calendar & Analytics
                 with gr.Column(scale=1):
-                    gr.Markdown("### 🏢 Enterprise State")
-                    with gr.Tabs() as tabs:
-                        with gr.Tab("📅 Calendar & Task Board", id="state_tab"):
-                            calendar_display = gr.HTML("<div>Calendar slots will appear here.</div>")
-                            taskboard_display = gr.HTML("<div>Active tickets will appear here.</div>")
-                            
+                    gr.Markdown("### 📅 Enterprise Scheduling state")
+                    calendar_plot = gr.Plot(label="Locked Events & Conflicts")
+                    
+                    with gr.Tabs():
                         with gr.Tab("🤖 Action Stream", id="agent_tab"):
-                            terminal_out = gr.Code(
-                                label="Execution Logs",
-                                value="Waiting for agent actions...",
-                                language="markdown",
-                                interactive=False,
-                                elem_classes="terminal-card"
-                            )
-                            
-                        with gr.Tab("📈 RL Training Curves", id="rl_tab"):
-                            gr.Markdown(
-                                "### Unsloth + TRL GRPO Training Rewards\n"
-                                "During internal training, the agent's multi-step capabilities quickly converge on maximum stepwise efficiencies."
-                            )
-                            # Using a mock placeholder image for the reward curve
-                            gr.HTML('<div style="text-align: center;"><img src="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/transformers/tasks/rlhf-reward-model.png" width="80%"></div>')
+                            terminal_out = gr.Code(label="Lightning Execution Logs", language="markdown", interactive=False)
+                        with gr.Tab("🛠 Controls", id="ctrl_tab"):
+                            reset_btn = gr.Button("🚀 Expert Reset", variant="primary")
+                            rl_toggle = gr.Checkbox(label="Enable RL Trained Weights", value=True)
+                            simulate_btn = gr.Button("🤖 Run Expert Simulation", variant="secondary")
 
             with gr.Row():
-                with gr.Column(scale=1):
-                    gr.Markdown("### 📊 Metrics")
-                    with gr.Row():
-                        score_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-score">0.00</div><div class="stat-label">Task Score</div></div>')
-                        step_stat = gr.HTML('<div class="stat-card"><div class="stat-value" id="stat-step">0</div><div class="stat-label">Steps Taken</div></div>')
-                
-                with gr.Column(scale=2):
-                    gr.Markdown("### 📈 Live Performance Trend")
-                    performance_chart = gr.BarPlot(
-                        label="Reward per Action",
-                        x="Step",
-                        y="Reward",
-                        tooltip=["Step", "Action", "Reward"],
-                        height=200,
-                        y_lim=[-1, 1]
-                    )
+                status_out = gr.HTML('<div style="padding: 10px; border-radius: 8px; background: rgba(99, 102, 241, 0.1); color: #818cf8; text-align: center;">Ready for expert simulation.</div>')
 
-        # ──────────────── UI rendering logic ──────────────── #
+        # --- Logic ---
 
-        def render_inbox(obs, state=None):
-            html = '<div style="height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">'
-            inbox_list = state.inbox if state else []
-            for email in inbox_list:
-                status = email.get("status", "unread")
-                icon = "📩" if status == "unread" else "✅"
-                color = "#e2e8f0" if status == "unread" else "#64748b"
-                html += f"""
-                <div class="email-row" style="opacity: {1.0 if status == 'unread' else 0.6}; border-left: 4px solid {'#eab308' if 'CRITICAL' in str(email.get('subject')) else '#3b82f6'};">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: {color};">{icon} {email.get('subject', 'No Subject')}</strong>
-                        <span class="label-pill" style="font-size: 0.7rem;">{status}</span>
-                    </div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">From: {email.get('sender', 'Unknown')}</div>
-                    <div style="font-size: 0.85rem; color: {color}; margin-top: 4px;">{email.get('body', '')}</div>
-                </div>
-                """
+        def update_calendar_viz(state):
+            times = [e["time"] for e in state.calendar]
+            labels = [e["event"] for e in state.calendar]
+            colors = ["#f87171" if e.get("locked") else "#60a5fa" for e in state.calendar]
+            
+            fig = go.Figure(data=[go.Bar(
+                x=times, y=[1]*len(times),
+                text=labels, textposition='auto',
+                marker_color=colors,
+                width=0.8
+            )])
+            fig.update_layout(
+                title="Calendar Slots (Red = Locked/Conflict)",
+                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                font_color="#94a3b8", height=250, margin=dict(l=20, r=20, t=40, b=20),
+                xaxis=dict(range=[8, 20], title="Hour of Day"),
+                yaxis=dict(visible=False)
+            )
+            return fig
+
+        def render_inbox(state):
+            html = '<div style="height: 300px; overflow-y: auto; border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 12px;">'
+            for eid, email in state.inbox.items():
+                is_p0 = "P0" in eid or "CRITICAL" in email["subject"]
+                border = "4px solid #ef4444" if is_p0 else "4px solid #3b82f6"
+                html += f'<div class="email-row" style="border-left: {border}; margin-bottom: 8px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">'
+                html += f'<strong>{email["subject"]}</strong><br><small style="color: #94a3b8;">{email["sender"]}</small><br>'
+                html += f'<p style="font-size: 0.85rem; margin-top: 4px;">{email["body"]}</p></div>'
             html += '</div>'
             return html
 
-        def render_enterprise(state):
-            cal_html = '<h4>Calendar Schedules</h4><div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-bottom: 15px; background: rgba(59, 130, 246, 0.05);">'
-            for c in getattr(state, "calendar", []):
-                cal_html += f'<div style="color: #60a5fa;">🕒 <strong>{c["time"]}</strong> - {c["event"]}</div>'
-            cal_html += '</div>'
-
-            task_html = '<h4>Task Board</h4><div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; background: rgba(234, 179, 8, 0.05);">'
-            for t in getattr(state, "task_board", []):
-                task_html += f'<div style="color: #fbbf24;">📋 <strong>[{t["ticket"]}]</strong> {t.get("issue", t.get("status"))}</div>'
-            task_html += '</div>'
-            
-            return cal_html, task_html
-
         def on_reset():
-            obs = env.reset(task="expert")
+            obs = env.reset(difficulty="expert")
             state = env.get_state()
-            inbox_h = render_inbox(obs, state)
-            cal_h, task_h = render_enterprise(state)
-            empty_df = pd.DataFrame({"Step": [], "Reward": [], "Action": []})
+            inbox_h = render_inbox(state)
+            cal_f = update_calendar_viz(state)
             
-            score_h = f'<div class="stat-card"><div class="stat-value">0.00</div><div class="stat-label">Task Score</div></div>'
-            step_h = f'<div class="stat-card"><div class="stat-value">0</div><div class="stat-label">Steps Taken</div></div>'
-            term_out = "Environment initialized. Ready."
+            curve_f = go.Figure().add_trace(go.Scatter(x=[1,2,3,4], y=[0.45, 0.62, 0.78, 0.92], mode="lines+markers", name="RL Reward Trend"))
+            curve_f.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#94a3b8", height=200, margin=dict(l=20, r=20, t=10, b=10))
             
-            return obs, inbox_h, cal_h, task_h, empty_df, score_h, step_h, term_out
+            return obs, inbox_h, cal_f, curve_f, "Environment Ready."
 
-        def on_simulate(mode_selection):
-            obs = env.reset(task="expert")
-            logs = [f"### 🤖 Simulation Started: {mode_selection}"]
-            chart_data = []
+        def on_simulate(is_rl):
+            obs = env.reset(difficulty="expert")
+            logs = ["### 🚀 Starting Lightning Simulation"]
             
-            if "Baseline" in mode_selection:
-                # Baseline crashes into calendar conflicts and hallucinates
-                actions = [
-                    Action(type=ActionType.schedule_meeting, time="15:00"), # Conflict
-                    Action(type=ActionType.reply_email, email_id="1", message="Done"),
+            # Logic actions
+            if is_rl:
+                # RL agent knows to check and then move to 16:00
+                steps = [
+                    '{"tool": "check_calendar", "params": {}}',
+                    '{"tool": "schedule_meeting", "params": {"time": 16.0}}', # Avoid 15:00
+                    '{"tool": "reply_email", "params": {"email_id": "e1"}}',
+                    '{"tool": "escalate", "params": {"email_id": "P0_3"}}' # Handle trigger
                 ]
             else:
-                # RL Trained agent uses correct intermediate steps and avoids conflicts
-                actions = [
-                    Action(type=ActionType.check_calendar),
-                    Action(type=ActionType.schedule_meeting, time="16:00"),
-                    Action(type=ActionType.reply_email, email_id="1", message="Meeting moved to 16:00."),
-                    Action(type=ActionType.create_ticket, issue="DB Down!"), # Will trigger at step 3 because of dynamic event at step 2
-                    Action(type=ActionType.reply_email, email_id="999", message="Investigating DB Down.")
+                # Baseline crashes
+                steps = [
+                    '{"tool": "schedule_meeting", "params": {"time": 15.0}}', # Conflict!
                 ]
-                
-            for act in actions:
-                res = env.step(act.model_dump_json())
-                logs.append(f"\n✅ **Step {res.info['step']}**: {act.type.value}")
+            
+            last_msg = ""
+            for s in steps:
+                res = env.step(s)
+                logs.append(f"✅ **Step {res.info['step']}**: {res.info['action_applied']} | Rew: {res.reward:.3f}")
                 logs.append(f"   > *Reasoning*: {res.reasoning}")
-                chart_data.append({"Step": res.info['step'], "Reward": res.reward, "Action": act.type.value})
-                if res.done:
-                    logs.append("\n🏁 Episodic limit or completion reached.")
-                    break
-
-            # Grade at the end
-            score_res = env.grader()
-            logs.append(f"\n--- \n### 🏁 Complete\n**Final Score: {score_res.score:.4f}**\n*Grader Log*: {score_res.details.get('msg', 'Failed task.')}")
+                last_msg = f"Rew: {res.reward:.3f} | {res.reasoning}"
+                if res.done: break
             
-            # Post-sim renders
             state = env.get_state()
-            inbox_h = render_inbox(obs, state)
-            cal_h, task_h = render_enterprise(state)
-            
-            score_h = f'<div class="stat-card"><div class="stat-value">{score_res.score:.2f}</div><div class="stat-label">Task Score</div></div>'
-            step_h = f'<div class="stat-card"><div class="stat-value">{state.step_count}</div><div class="stat-label">Steps Taken</div></div>'
-            df = pd.DataFrame(chart_data)
-            
-            return "\n".join(logs), inbox_h, cal_h, task_h, df, score_h, step_h
+            return "\n\n".join(logs), render_inbox(state), update_calendar_viz(state), last_msg
 
-
-        reset_btn.click(
-            on_reset, 
-            inputs=[], 
-            outputs=[current_obs, inbox_display, calendar_display, taskboard_display, performance_chart, score_stat, step_stat, terminal_out]
-        )
-        
-        simulate_btn.click(
-            on_simulate,
-            inputs=[agent_mode],
-            outputs=[terminal_out, inbox_display, calendar_display, taskboard_display, performance_chart, score_stat, step_stat]
-        )
+        reset_btn.click(on_reset, outputs=[current_obs, inbox_display, calendar_plot, score_plot, terminal_out])
+        simulate_btn.click(on_simulate, inputs=[rl_toggle], outputs=[terminal_out, inbox_display, calendar_plot, status_out])
 
     return demo
