@@ -28,7 +28,7 @@ As part of the OpenEnv ecosystem, this project aims to solve the fragmentation i
 docker build -t enterprise-max-4 .
 docker run --gpus all -p 7860:7860 enterprise-max-4
 ```
-👉 **Gradio Dashboard:** [http://localhost:7860/ui](http://localhost:7860/ui)
+👉 **Gradio Dashboard:** [http://localhost:7860/dashboard](http://localhost:7860/dashboard)
 👉 **Interactive API Docs:** [http://localhost:7860/docs](http://localhost:7860/docs)
 
 ---
