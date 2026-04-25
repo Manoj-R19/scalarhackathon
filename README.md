@@ -1,8 +1,8 @@
 ---
 title: EmailTriage Sovereign Agent
 emoji: 🛡️
-colorFrom: cyan
-colorTo: violet
+colorFrom: blue
+colorTo: purple
 sdk: gradio
 sdk_version: "4.40.0"
 app_file: app.py
