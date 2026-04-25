@@ -1,3 +1,12 @@
+---
+title: EmailTriage Enterprise Max
+emoji: 🛡️
+colorFrom: indigo
+colorTo: slate
+sdk: docker
+pinned: false
+---
+
 # 🚀 Enterprise Max 4.0: Ultimate Agent Simulator
 
 🏆 **Scalar OpenEnv Hackathon 2025 - Gold Edition**
