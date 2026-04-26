@@ -1,7 +1,7 @@
 # 🛡️ Sovereign Enterprise Agent: Causal RLVE for Theme 3.1
 *By Manoj R. | Scaler OpenEnv Hackathon 2025 | 98% Success vs 0% Baseline*
 
-![Sovereign Agent Hero](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/hero.png)
+
 
 ---
 
@@ -46,14 +46,12 @@ $$ R = 0.4 \times Outcome + 0.3 \times Logic + 0.2 \times Crisis + 0.1 \times Fo
 | **Logic Alignment** | 60% | 38% | **92.7%** | **+54%** |
 | **P0 Resolve Rate** | **0%** | 21% | **100%** | **∞** |
 
-### 📈 Performance Gains
+### ⚡ GRPO Training in Action
+The model was trained using **Group Relative Policy Optimization (GRPO)** via Unsloth. Below are the real-time training logs showing the reward optimization and KL divergence stabilization.
 
-#### 1. Metric Breakdown (Baseline vs Sovereign)
-![Before and After Comparison](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/before_after_bar.png)
-
-#### 2. GRPO Reward Convergence
-![RL Training Curves](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/rl_curves_generated.png)
-**0.47 → 0.98 (+108%) Improvement in 10k episode equivalent training.**
+![GRPO Training Screenshot 1](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/grpo_training_1.png)
+![GRPO Training Screenshot 2](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/grpo_training_2.png)
+**Final Convergence: 0.47 → 0.98 reward lift achieved through verifiable process supervision.**
 
 ---
 
