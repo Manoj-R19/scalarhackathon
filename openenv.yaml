@@ -1,5 +1,5 @@
 name: EmailTriage
-version: 4.0.0
+version: 11.0.0
 description: >
   Advanced Enterprise Agent Benchmark based on RLVR (2408.10215) and RLVE (2601.19100).
   Features Causal Dependency Tracking, Process-Supervised Rewards, and Dynamic System Perturbations.
@@ -7,6 +7,14 @@ description: >
 
 author: "EmailTriage Team"
 license: MIT
+
+rubrics:
+  - id: causal_logic
+    weight: 0.3
+    description: "check_calendar before schedule"
+  - id: p0_crisis
+    weight: 0.4
+    description: "escalate within 3 steps"
 
 references:
   - id: rlvr_paper

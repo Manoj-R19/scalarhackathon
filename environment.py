@@ -187,7 +187,7 @@ class EmailTriageEnv:
     Crisis injection   : at step crisis_inject_at (if enabled)
     """
 
-    VERSION = "5.0.0"
+    VERSION = "11.0.0"
     MAX_STEPS = 20
     CRISIS_INJECT_AT = 7   # inject crisis after step 7
 
@@ -573,7 +573,7 @@ class EmailTriageEnv:
         norm_score = float(np.clip(total_raw / 20.0, 0.01, 0.99))
         
         # Log both as requested for Phase 2 verification
-        print(f"Raw: {total_raw:.2f} -> Norm: {norm_score:.4f}")
+        print(f"DEBUG: Raw={total_raw:.2f} -> Norm={norm_score:.3f} OK [0.01-0.99]")
         
         metrics = self.get_episode_metrics()
         return GraderResult(
