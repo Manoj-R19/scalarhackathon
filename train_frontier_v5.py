@@ -24,11 +24,22 @@ from typing import Optional
 try:
     import torch
     from datasets import Dataset
+    import transformers
     from transformers import TrainingArguments
+    
+    # Compatibility fix for newer transformers versions and llm_blender/trl
+    if not hasattr(transformers.utils.hub, "TRANSFORMERS_CACHE"):
+        try:
+            transformers.utils.hub.TRANSFORMERS_CACHE = transformers.utils.hub.HF_HUB_CACHE
+        except AttributeError:
+            # Fallback for very old or very new structures
+            transformers.utils.hub.TRANSFORMERS_CACHE = os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub")
+
     from trl import GRPOConfig, GRPOTrainer
     from unsloth import FastLanguageModel
     TRAINING_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(f"Import Error: {e}")
     TRAINING_AVAILABLE = False
 
 from environment import (
@@ -432,7 +443,22 @@ def run_benchmark(n_episodes: int = 30):
 
 if __name__ == "__main__":
     import sys
-    if "--train" in sys.argv:
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="EmailTriage Sovereign Agent Training")
+    parser.add_argument("--train", action="store_true", help="Start training mode")
+    parser.add_argument("--epochs", type=int, default=CFG.num_train_epochs, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=CFG.per_device_train_batch_size, help="Batch size per device")
+    parser.add_argument("--bench", action="store_true", help="Run benchmark")
+    
+    args, unknown = parser.parse_known_args()
+    
+    if args.train:
+        CFG.num_train_epochs = args.epochs
+        CFG.per_device_train_batch_size = args.batch_size
         train()
-    else:
+    elif args.bench or "--bench" in sys.argv:
         run_benchmark(n_episodes=20)
+    else:
+        # Default behavior if no flag
+        run_benchmark(n_episodes=10)

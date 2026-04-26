@@ -6,6 +6,16 @@ import time
 import numpy as np
 import torch
 import json
+import os
+import transformers
+
+# Compatibility fix for newer transformers versions and llm_blender/trl
+if not hasattr(transformers.utils.hub, "TRANSFORMERS_CACHE"):
+    try:
+        transformers.utils.hub.TRANSFORMERS_CACHE = transformers.utils.hub.HF_HUB_CACHE
+    except AttributeError:
+        transformers.utils.hub.TRANSFORMERS_CACHE = os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub")
+
 from unsloth import FastLanguageModel, PatchFastRL
 from trl import GRPOTrainer, GRPOConfig
 from datasets import load_from_disk
