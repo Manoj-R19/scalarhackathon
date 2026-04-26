@@ -321,6 +321,7 @@ textarea, .gr-textbox textarea {
 # ─────────────────────────────────────────────────────────────────────────────
 
 with gr.Blocks(title="Sovereign Agent v10 - Live Benchmark") as demo:
+    gr.HTML(f"<style>{CSS}</style>")
 
     # STATE: stores live benchmark results
     bench_state = gr.State(value=None)
@@ -488,4 +489,4 @@ async def get_meta():
 app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
-    demo.launch(theme=gr.themes.Base(), css=CSS, server_port=7860)
+    uvicorn.run(app, host="0.0.0.0", port=7860, log_level="info")
