@@ -63,6 +63,17 @@ $$ R = 0.4 \times Outcome + 0.3 \times Logic + 0.2 \times Crisis + 0.1 \times Fo
 
 ---
 
+## 👁️ Inside the Command Center
+The Sovereign Agent operates completely transparently. The dashboard tracks real-time reasoning traces, causal logic validation, and reward accrual.
+
+### Live Environment & Leaderboard
+![Live Benchmark Dashboard](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/live_benchmark_dashboard.png)
+
+### Step-by-Step Verifiable Reasoning
+![Reasoning Trace](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/live_reasoning_trace.png)
+
+---
+
 ## 🔗 Production Ready & Discoverable
 🚀 **[Live HF Space](https://hf.space/ManojR19/sovereign-agent)**  
 📓 **[Colab Training (Judges Re-run)](https://colab.research.google.com/drive/1H8ljG7N4NS-_591BGGjbVoewiXD4Yn62)**  
