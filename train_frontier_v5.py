@@ -387,7 +387,7 @@ def train():
         warmup_ratio                   = CFG.warmup_ratio,
         beta                           = CFG.beta,
         output_dir                     = CFG.output_dir,
-        report_to                      = "none",
+        report_to                      = ["tensorboard"],
         remove_unused_columns          = False,
         optim                          = "adamw_8bit",
         fp16                           = not torch.cuda.is_bf16_supported(),
