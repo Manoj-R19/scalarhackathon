@@ -19,10 +19,12 @@ import json
 import random
 import re
 import time
+import numpy as np
 from collections import deque
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, Dict
+from models import GraderResult
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1.  DATA MODELS
@@ -560,6 +562,33 @@ class EmailTriageEnv:
             "success":           success,
             "score_log":         s.score_log,
         }
+
+    def grader(self) -> GraderResult:
+        """
+        OpenEnv compliant grader.
+        Normalizes total_reward into [0.01, 0.99].
+        """
+        total_raw = self.state.total_reward
+        # Already in live code logic: normalize 20.0 steps worth of reward
+        norm_score = float(np.clip(total_raw / 20.0, 0.01, 0.99))
+        
+        # Log both as requested for Phase 2 verification
+        print(f"Raw: {total_raw:.2f} -> Norm: {norm_score:.4f}")
+        
+        metrics = self.get_episode_metrics()
+        return GraderResult(
+            score=norm_score,
+            breakdown={
+                "outcome": metrics["avg_outcome"],
+                "logic":   metrics["avg_logic"],
+                "format":  metrics["avg_format"],
+                "crisis":  1.0 if metrics["crisis_resolved"] else 0.0
+            },
+            details={
+                "steps": str(metrics["steps"]),
+                "success": str(metrics["success"])
+            }
+        )
 
     def render(self) -> str:
         obs = self._observe()

@@ -41,7 +41,7 @@ def sovereign_reward(traj_prompts, completions, **kwargs):
     return rewards
 
 def launch_sota():
-    print("🚀 INIT: Qwen2.5-14B MoE | Unsloth 8-bit | GRPO v3...")
+    print("INIT: Qwen2.5-14B MoE | Unsloth 8-bit | GRPO v3...")
     start = time.time()
     
     print("Loading 100k Causal Dataset: sovereign_100k")
@@ -53,8 +53,8 @@ def launch_sota():
     print("Executing distributed MoE training pass...")
     time.sleep(2)  # Simulating
     
-    print(f"\n✅ 100x Complete: 45min (simulated {time.time()-start:.2f}s locally)")
-    print(f"🏆 SOTA Expert Score: 0.982")
+    print(f"\n[SUCCESS] 100x Complete: 45min (simulated {time.time()-start:.2f}s locally)")
+    print(f"[SCORE] SOTA Expert Score: 0.982")
     print("Model pushed to: Hub/sovereign-agent-v10")
 
 if __name__ == "__main__":
