@@ -88,6 +88,21 @@ We leveraged **Unsloth** for memory-efficient 4-bit training of **Qwen2.5-7B**, 
 
 ---
 
+## 📂 Project Structure
+
+| File / Folder | Role |
+| :--- | :--- |
+| `environment.py` | 🧠 The POMDP World + Causal Gate Logic |
+| `train_frontier_v5.py` | ⚡ GRPO v2 Training Pipeline (Unsloth) |
+| `app.py` | 🎨 Gradio Live Benchmark Dashboard |
+| `rubrics.py` | ⚖️ OpenEnv Rubric Evaluation System |
+| `openenv.yaml` | 📋 Phase 2 & 3 Compliance Config |
+| `docs/` | 🖼️ Infographics & Design Assets |
+| `sovereign_train_v11.ipynb` | 📓 Colab Training Notebook |
+| `RESEARCH_PAPER.md` | 🔬 Academic Analysis of RLVE |
+
+---
+
 ## 🔬 Research Paper
 A detailed academic analysis of the Causal RLVE framework can be found in [RESEARCH_PAPER.md](RESEARCH_PAPER.md).
 
