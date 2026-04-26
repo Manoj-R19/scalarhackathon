@@ -1,7 +1,7 @@
 # 🛡️ Sovereign Enterprise Agent: Causal RLVE for Theme 3.1
 *By Manoj R. | Scaler OpenEnv Hackathon 2025 | 98% Success vs 0% Baseline*
 
-
+![Sovereign Agent Hero](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/sovereign_hero.png)
 
 ---
 
@@ -71,6 +71,8 @@ Without RLVE, the agent hallucinates workflows and misses critical P0 alerts, re
 
 ### ✅ After Training (Sovereign Agent v11.0)
 Post-GRPO training, the agent perfectly navigates causal logic gates and successfully resolves P0 crises, achieving a **98% Success Rate**. Notice how the **Cumulative Reward** climbs steadily!
+
+
 ![Sovereign Dashboard](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/sovereign_dash.png)
 ![Sovereign Trace](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/sovereign_trace.png)
 
