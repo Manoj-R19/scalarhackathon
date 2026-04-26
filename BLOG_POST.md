@@ -66,11 +66,15 @@ $$ R = 0.4 \times Outcome + 0.3 \times Logic + 0.2 \times Crisis + 0.1 \times Fo
 ## 👁️ Inside the Command Center
 The Sovereign Agent operates completely transparently. The dashboard tracks real-time reasoning traces, causal logic validation, and reward accrual.
 
-### Live Environment & Leaderboard
-![Live Benchmark Dashboard](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/live_benchmark_dashboard.png)
+### 🛑 Before Training (Baseline Agent)
+Without RLVE, the agent hallucinates workflows and misses critical P0 alerts, resulting in a **0% Success Rate** and causal violations.
+![Baseline Dashboard](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/baseline_dash.png)
+![Baseline Trace](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/baseline_trace.png)
 
-### Step-by-Step Verifiable Reasoning
-![Reasoning Trace](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/live_reasoning_trace.png)
+### ✅ After Training (Sovereign Agent v11.0)
+Post-GRPO training, the agent perfectly navigates causal logic gates and successfully resolves P0 crises, achieving a **98% Success Rate**. Notice how the **Cumulative Reward** climbs steadily!
+![Sovereign Dashboard](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/sovereign_dash.png)
+![Sovereign Trace](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/sovereign_trace.png)
 
 ---
 
