@@ -26,7 +26,7 @@ tags:
 
 **Next-Gen Enterprise RL Agent · RLVR + RLVE · Verifiable Causal Reasoning**
 
-![Hero Image](docs/images/hero.png)
+![Hero Image](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/hero.png)
 
 [![Version](https://img.shields.io/badge/version-10.0.0-00e5ff?style=for-the-badge)](#)
 [![Algorithm](https://img.shields.io/badge/GRPO_v2-DeepSeek_R1_style-7c3aed?style=for-the-badge)](#)
@@ -74,7 +74,7 @@ We leveraged **Unsloth** for memory-efficient 4-bit training of **Qwen2.5-7B**, 
 
 ## 🏆 Comparison: Sovereign vs. The World
 
-![Comparison](docs/images/comparison.png)
+![Comparison](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/comparison.png)
 
 | Metric | Heuristic Baseline | Llama 3.1-8B (Sim) | GPT-4o-mini (Sim) | **Sovereign v10🛡️** |
 |--------|-------------------|-------------------|-------------------|-------------------|
