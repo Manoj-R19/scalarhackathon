@@ -47,7 +47,12 @@ $$ R = 0.4 \times Outcome + 0.3 \times Logic + 0.2 \times Crisis + 0.1 \times Fo
 | **P0 Resolve Rate** | **0%** | 21% | **100%** | **∞** |
 
 ### 📈 Performance Gains
-![Before and After Comparison](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/comparison.png)
+
+#### 1. Metric Breakdown (Baseline vs Sovereign)
+![Before and After Comparison](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/before_after_bar.png)
+
+#### 2. GRPO Reward Convergence
+![RL Training Curves](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/rl_curves_generated.png)
 **0.47 → 0.98 (+108%) Improvement in 10k episode equivalent training.**
 
 ---
