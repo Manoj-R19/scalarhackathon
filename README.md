@@ -56,6 +56,13 @@ tags:
 ![RL Curves](https://raw.githubusercontent.com/Manoj-R19/scalarhackathon/main/docs/images/comparison.png) 
 *0.47→0.95 Reward Lift (+102%) verified via GRPO Training Logs.*
 
+### 🗺️ AI Capability Map (The "Difference Map")
+Our latest version includes a 6-dimensional **Radar Skill Map** that visualizes the quantum leap from heuristic baselines to Sovereign agents.
+- **Logic Alignment**: Verifies reasoning steps against actions.
+- **Causal Compliance**: Checks tool prerequisites (e.g., reading before replying).
+- **Crisis Resolution**: Measures speed and accuracy of P0 response.
+- **Task Mastery**: Outcome success across 4 apps.
+
 ---
 
 ## ⚙️ How It Works: The RLVE/RLVR Engine

@@ -441,6 +441,54 @@ def run_benchmark(n_episodes: int = 30):
     return results
 
 
+def plot_capability_map(results: dict):
+    """Plot a radar chart comparing Sovereign and Baseline results."""
+    try:
+        import matplotlib.pyplot as plt
+        import numpy as np
+    except ImportError:
+        print("[INFO] Install matplotlib/numpy to use plot_capability_map")
+        return
+
+    labels = ["Success Rate", "Avg Reward", "Logic Score", "Crisis Resolve", "Causal Compliance"]
+    
+    def get_vals(agent_res):
+        return [
+            agent_res.get("success_rate", 0),
+            agent_res.get("avg_reward", 0) / 20.0,
+            agent_res.get("avg_logic", 0),
+            agent_res.get("crisis_resolve_rate", 0),
+            1.0 - (agent_res.get("avg_causal_violations", 0) / 10.0) # scaled
+        ]
+
+    sov_vals = get_vals(results["sovereign"])
+    base_vals = get_vals(results["baseline"])
+
+    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+    sov_vals += sov_vals[:1]
+    base_vals += base_vals[:1]
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(polar=True))
+    ax.set_facecolor('#0f172a')
+    fig.patch.set_facecolor('#0f172a')
+    
+    ax.fill(angles, sov_vals, color='#3b82f6', alpha=0.3, label='Sovereign (Ours)')
+    ax.plot(angles, sov_vals, color='#3b82f6', linewidth=3)
+    
+    ax.fill(angles, base_vals, color='#ef4444', alpha=0.15, label='Baseline')
+    ax.plot(angles, base_vals, color='#ef4444', linewidth=2, linestyle='--')
+    
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels, color='#e2e8f0', fontsize=11)
+    ax.set_yticklabels([])
+    ax.grid(color='#1e293b')
+    
+    plt.title("AI Difference Map: Sovereign vs Baseline", color='#f8fafc', size=16, y=1.1)
+    plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    plt.show()
+
+
 if __name__ == "__main__":
     import sys
     import argparse
